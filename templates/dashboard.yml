@@ -1,0 +1,32 @@
+# Living Dashboard → https://nimmsel23.github.io/<repo>/
+# Engine + Doku: https://github.com/nimmsel23/dashboards/tree/engine
+# Täglich + bei jedem dev-Push: Regeln + Gemini-Lagebild. Montags zusätzlich Claude-Tiefenanalyse.
+name: Dashboard
+on:
+  push:
+    branches: [dev]
+  schedule:
+    - cron: "40 4 * * 1"   # Mo: mit Claude-Tiefenanalyse
+    - cron: "40 4 * * 0,2-6"
+  workflow_dispatch:
+    inputs:
+      deep:
+        description: Claude-Tiefenanalyse jetzt ausführen
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  issues: write
+  actions: read
+  pull-requests: read
+  pages: write
+  id-token: write
+concurrency:
+  group: dashboard-pages
+  cancel-in-progress: false  # Montags-Tiefenanalyse nicht durch dev-Push abbrechen
+jobs:
+  dashboard:
+    uses: nimmsel23/dashboards/.github/workflows/repo-dashboard.yml@engine
+    with:
+      deep: ${{ github.event.schedule == '40 4 * * 1' || inputs.deep == true }}
+    secrets: inherit

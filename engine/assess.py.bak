@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+"""Bewertet evidence.json → assessment.json.
+
+1. Regeln (deterministisch) setzen die Ampel. Nur Regeln öffnen das Lage-Issue —
+   die KI kann keinen Alarm erfinden.
+2. Gemini (falls GEMINI_API_KEY) schreibt Lagebild, Auffälligkeiten, nächste
+   Schritte — nur aus der Evidenz, mit Vorlauf (letzte Einschätzung + Tiefenanalyse).
+
+    assess.py --evidence evidence.json --state <state-dir> --out assessment.json
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import os
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+FAIL = {"failure", "timed_out", "startup_failure"}
+NOW = dt.datetime.now(dt.timezone.utc)
+
+
+def age_h(iso: str | None) -> float | None:
+    if not iso:
+        return None
+    try:
+        return (NOW - dt.datetime.fromisoformat(iso.replace("Z", "+00:00"))).total_seconds() / 3600
+    except ValueError:
+        return None
+
+
+def rules(ev: dict) -> tuple[str, list[dict]]:
+    sig: list[dict] = []
+    br = ev.get("branches", {})
+    main = br.get("main") or "master"
+    watched = {"dev", main}
+    for w in ev.get("workflows", []):
+        if w.get("branch") in watched and w.get("conclusion") in FAIL:
+            sig.append({"level": "red", "key": f"ci:{w['name']}:{w['branch']}",
+                        "text": f"„{w['name']}“ auf {w['branch']} ist rot ({w['conclusion']}, {w['sha']})",
+                        "url": w.get("url")})
+    ahead, behind = br.get("dev_ahead", 0), br.get("dev_behind", 0)
+    if br.get("has_dev") and ahead and behind:
+        sig.append({"level": "red", "key": "diverged",
+                    "text": f"dev und {main} sind auseinandergelaufen ({ahead} vor, {behind} hinter) — Auto-Promote kann nicht vorspulen"})
+    elif ahead:
+        h = age_h(br.get("oldest_unpromoted"))
+        if h is not None and h > 24:
+            sig.append({"level": "yellow", "key": "promote",
+                        "text": f"{ahead} Commit(s) auf dev seit {h/24:.1f} Tagen nicht auf {main} promotet"})
+    for p in ev.get("pulls", []):
+        h = age_h(p.get("created_at"))
+        if h is not None and h > 24 * 7:
+            sig.append({"level": "yellow", "key": f"pr:{p['number']}",
+                        "text": f"PR #{p['number']} seit {h/24:.0f} Tagen offen: {p['title']}", "url": p.get("url")})
+    h = age_h((ev.get("commits") or [{}])[0].get("date"))
+    if h is not None and h > 24 * 30:
+        sig.append({"level": "info", "key": "quiet", "text": f"Seit {h/24:.0f} Tagen kein Commit auf dev"})
+    status = "red" if any(s["level"] == "red" for s in sig) else "yellow" if any(
+        s["level"] == "yellow" for s in sig) else "green"
+    return status, sig
+
+
+PROMPT = """Du bist der Lage-Analyst für das Software-Repo {repo} (Teil von VitalOS, Ein-Personen-Betrieb von Daniel).
+Du bekommst gesammelte Evidenz (git, CI-Läufe, Issues, PRs, Repo-Docs), die deterministischen Regel-Signale,
+deine letzte Einschätzung und ggf. eine wöchentliche Tiefenanalyse.
+
+Regeln:
+- Nur was in der Evidenz steht. Keine erfundenen Zahlen, Nutzer, KPIs oder Deadlines. Unbekanntes = weglassen.
+- Deutsch, sachlich-knapp, keine Floskeln, kein Marketing.
+- Konkret: Workflow-Namen, Issue-Nummern, Commit-Hashes nennen, wenn du dich darauf beziehst.
+- "naechste_schritte": höchstens 3, jeweils eine konkrete Handlung (Verb zuerst), die heute machbar ist.
+- "veraendert": was sich gegenüber deiner letzten Einschätzung geändert hat (1 Satz), sonst leer.
+- "fragen": höchstens 2 offene Entscheidungen, die nur der Owner treffen kann; sonst leer.
+
+Antworte NUR mit JSON nach diesem Schema:
+{{"headline": str (max 80 Zeichen), "lage": str (2-3 Sätze), "auffaelligkeiten": [{{"level": "hoch"|"mittel"|"info", "text": str}}],
+ "naechste_schritte": [str], "veraendert": str, "fragen": [str]}}
+
+REGEL-SIGNALE:
+{signals}
+
+LETZTE EINSCHÄTZUNG:
+{prev}
+
+TIEFENANALYSE (wöchentlich, Claude):
+{deep}
+
+EVIDENZ:
+{evidence}
+"""
+
+
+def gemini(prompt: str) -> dict | None:
+    key = os.environ.get("GEMINI_API_KEY")
+    if not key:
+        return None
+    model = os.environ.get("GEMINI_MODEL") or "gemini-2.5-flash"
+    body = json.dumps({
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"},
+    }).encode()
+    req = urllib.request.Request(
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+        data=body, headers={"Content-Type": "application/json", "x-goog-api-key": key}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=90) as r:
+            data = json.load(r)
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        out = json.loads(text)
+        out["model"] = model
+        return out
+    except (urllib.error.URLError, KeyError, IndexError, json.JSONDecodeError, TimeoutError) as e:
+        print(f"::warning::Gemini-Einschätzung fehlgeschlagen: {type(e).__name__}")
+        return None
+
+
+def trim_evidence(ev: dict) -> dict:
+    ev = json.loads(json.dumps(ev))
+    ev["commits"] = ev.get("commits", [])[:15]
+    ev["workflows"] = ev.get("workflows", [])[:25]
+    ev.pop("activity", None)
+    return ev
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--evidence", required=True)
+    ap.add_argument("--state", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    ev = json.loads(Path(a.evidence).read_text())
+    state = Path(a.state)
+
+    status, sig = rules(ev)
+    prev = {}
+    if (state / "dashboard.json").is_file():
+        try:
+            prev = json.loads((state / "dashboard.json").read_text()).get("assessment", {}).get("ai") or {}
+        except json.JSONDecodeError:
+            prev = {}
+    deep = (state / "deep.md").read_text(encoding="utf-8")[:6000] if (state / "deep.md").is_file() else ""
+
+    ai = gemini(PROMPT.format(
+        repo=ev["repo"],
+        signals=json.dumps(sig, ensure_ascii=False, indent=1) or "[]",
+        prev=json.dumps({k: prev.get(k) for k in ("headline", "lage", "naechste_schritte")}, ensure_ascii=False) if prev else "(keine)",
+        deep=deep or "(keine)",
+        evidence=json.dumps(trim_evidence(ev), ensure_ascii=False)[:60000],
+    ))
+    out = {"status": status, "signals": sig, "ai": ai, "ai_at": NOW.isoformat(timespec="seconds") if ai else prev and None}
+    Path(a.out).write_text(json.dumps(out, ensure_ascii=False, indent=1))
+    print(f"status={status} signals={len(sig)} ai={'ja' if ai else 'nein'}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

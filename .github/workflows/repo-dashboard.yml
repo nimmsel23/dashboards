@@ -1,0 +1,175 @@
+# Living Dashboard pro Dev-Repo → GitHub Pages (Startseite /index.html).
+#
+# Aufruf aus dem Ziel-Repo (.github/workflows/dashboard.yml):
+#   uses: nimmsel23/dashboards/.github/workflows/repo-dashboard.yml@engine
+#   secrets: inherit
+#
+# Ablauf: Evidenz sammeln (git + GitHub-API) → Regeln setzen die Ampel →
+# Gemini schreibt Lagebild (jeder Lauf) → Claude schreibt Tiefenanalyse (deep=true,
+# montags) → HTML rendern → Lage-Issue pflegen → Zustand auf Branch `dashboard`
+# sichern → docs/ (Jekyll) + Dashboard als Pages deployen.
+#
+# dev/master werden NIE beschrieben: ein Bot-Commit dort würde die Auto-Promotion
+# (Fast-Forward + check-Run auf dev-HEAD) blockieren.
+name: repo-dashboard
+
+on:
+  workflow_call:
+    inputs:
+      deep:
+        description: Claude-Tiefenanalyse ausführen
+        type: boolean
+        default: false
+      branch:
+        description: Arbeits-Branch (Inhalt von docs/ und Commits)
+        type: string
+        default: dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      issues: write
+      actions: read
+      pull-requests: read
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+          path: repo
+          lfs: false
+          submodules: false
+
+      - name: Checkout Engine
+        uses: actions/checkout@v4
+        with:
+          repository: nimmsel23/dashboards
+          ref: engine
+          path: engine-src
+
+      - name: Zustand laden (Branch dashboard)
+        run: |
+          mkdir -p state work site-dash
+          if git -C repo fetch -q origin dashboard:refs/remotes/origin/dashboard 2>/dev/null; then
+            git -C repo archive origin/dashboard | tar -x -C state
+            echo "Zustand: $(ls state | tr '\n' ' ')"
+          else
+            echo "Noch kein Zustand (erster Lauf)."
+          fi
+
+      - name: Evidenz sammeln
+        working-directory: repo
+        run: python3 ../engine-src/engine/collect.py --repo "$GITHUB_REPOSITORY" --out ../work/evidence.json
+
+      - name: Tiefenanalyse (Claude, wöchentlich)
+        if: inputs.deep && env.HAS_CLAUDE == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          claude_args: >-
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Write,Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git -C repo log:*),Bash(git -C repo show:*),Bash(git -C repo diff:*),Bash(gh run view:*),Bash(gh issue view:*),Bash(gh pr view:*)"
+          prompt: |
+            Du bist der wöchentliche Tiefenanalyst für das Repo ${{ github.repository }} (VitalOS, Ein-Personen-Betrieb von Daniel).
+            Das Repo liegt in ./repo (Branch ${{ inputs.branch }}), die gesammelte Evidenz in ./work/evidence.json,
+            die letzte Tiefenanalyse (falls vorhanden) in ./state/deep.md, die letzte Tages-Einschätzung in ./state/dashboard.json.
+
+            Aufgabe: Prüfe die Lage selbst am Code und an den Docs (NEXT.md, TODO.md, ROADMAP.md, docs/), nicht nur an der Evidenz.
+            Verfolge Hypothesen: Stimmen Doku und Code überein? Was ist halb fertig? Wo liegt Risiko für Nutzer oder Deploy?
+
+            Schreibe das Ergebnis NUR nach ./work/deep.md (Deutsch, sachlich-knapp, max. 450 Wörter) mit genau diesen Abschnitten:
+            ## Wo das Repo steht
+            ## Risiken
+            ## Widersprüche Doku ↔ Code
+            ## Empfehlung für diese Woche   (höchstens 3 Punkte, Verb zuerst)
+            ## Seit letzter Woche          (nur wenn ./state/deep.md existiert)
+
+            Regeln: Jede Aussage mit Beleg (Datei:Zeile, Commit-Hash, Issue-Nummer oder Workflow-Lauf). Nichts erfinden — Unbekanntes weglassen.
+            Ändere nichts im Repo, erstelle keine Issues/PRs/Kommentare. Einzige Datei, die du schreibst: ./work/deep.md.
+
+      - name: Tiefenanalyse übernehmen
+        run: |
+          if [ -s work/deep.md ]; then
+            cp work/deep.md state/deep.md
+            printf '{"at":"%s","sha":"%s"}\n' "$(date -u +%FT%TZ)" "$(git -C repo rev-parse --short HEAD)" > state/deep.meta.json
+            echo "Tiefenanalyse aktualisiert."
+          fi
+
+      - name: Lage bewerten (Regeln + Gemini)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 engine-src/engine/assess.py --evidence work/evidence.json --state state --out work/assessment.json
+
+      - name: Dashboard rendern
+        run: python3 engine-src/engine/render.py --evidence work/evidence.json --assessment work/assessment.json --state state --out site-dash
+
+      - name: Lage-Issue pflegen
+        run: |
+          url=$(python3 -c "import json;print(json.load(open('work/evidence.json'))['meta'].get('pages_url') or '')")
+          python3 engine-src/engine/issue.py --repo "$GITHUB_REPOSITORY" --assessment work/assessment.json --pages-url "$url"
+
+      - name: Zustand sichern (Branch dashboard)
+        run: |
+          cd repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git rev-parse -q --verify origin/dashboard >/dev/null; then
+            git worktree add -q ../statewt -B dashboard origin/dashboard
+          else
+            git worktree add -q --orphan -b dashboard ../statewt
+          fi
+          cd ../statewt
+          cp ../site-dash/index.html ../site-dash/dashboard.json .
+          [ -f ../state/deep.md ] && cp ../state/deep.md ../state/deep.meta.json . || true
+          printf '# dashboard\n\nAutomatisch gepflegter Zustand des Living Dashboards (index.html, dashboard.json, deep.md).\nNicht von Hand bearbeiten. Engine: nimmsel23/dashboards@engine\n' > README.md
+          git add -A
+          git commit -q -m "dashboard: $(python3 -c "import json;a=json.load(open('dashboard.json'))['assessment'];print(a['status'], '-', ((a.get('ai') or {}).get('headline') or 'ohne KI'))")" || { echo "Keine Änderung."; exit 0; }
+          git push -q origin dashboard
+
+      - name: docs/ bauen (Jekyll)
+        id: jekyll
+        continue-on-error: true
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./repo/docs
+          destination: ./_site
+
+      - name: Seite zusammensetzen
+        run: |
+          if [ "${{ steps.jekyll.outcome }}" != "success" ]; then
+            echo "::warning::Jekyll-Build von docs/ fehlgeschlagen — docs/ wird roh ausgeliefert."
+            [ -e _site ] && sudo mv _site _site.failed; mkdir -p _site
+            [ -d repo/docs ] && cp -r repo/docs/. _site/ || true
+          fi
+          sudo chown -R "$(id -u):$(id -g)" _site
+          # Eine vorhandene docs-Startseite bleibt unter docs.html erreichbar.
+          [ -f _site/index.html ] && mv _site/index.html _site/docs.html
+          cp site-dash/index.html site-dash/dashboard.json _site/
+          ls _site | head -40
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
