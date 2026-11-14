@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VitalOS · Coaching-Dashboard</title>
+<link rel="canonical" href="https://nimmsel23.github.io/dashboards/coaching/">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<a class="skip" href="#inhalt">Zum Inhalt</a>
+<div class="wrap">
+<header>
+<h1>Coaching-Dashboard</h1>
+<p class="lede">Rhythmus, Fokus und nächste Stunde der Einzelbegleitungen. Klienten nur anonym (K-xx/T-xx).</p>
+</header>
+<nav class="local" aria-label="Navigation">
+<a href="../">Alle Dashboards</a>
+<a href="../org/">Organisation</a>
+</nav>
+<main id="inhalt">
+<section id="coaching" class="coaching-dashboard" aria-label="Coaching">
+<div class="prose prose-coaching">
+<p><strong>Workspace:</strong> Erster Business-Bereich im Dashboard-Index.
+<strong>Owner:</strong> Individual Consultant (Coaching-Seite der Org)<br>
+<strong>Stand:</strong> 2026-11-13 (Europe/Vienna)<br>
+<strong>Index:</strong> <a href="../">org/DASHBOARDS.md</a></p>
+<p>Dieses Praxisboard hält Kapazität, Trainingsrhythmus und die nächste konkrete Stunde der Einzelbegleitungen. Es ist der Arbeitsbereich für das Coaching, nicht eine Produkt-CI-Übersicht. VitalOS bleibt Produkt, Marke und praktisches Coach-Werkzeug; hier zählt sein Nutzen in der tatsächlichen Arbeit. Bis persönliche Leads und aktive Attention-Generator-Kanäle belegt sind, bleiben Play-Store-Veröffentlichung und Feature-Roadmap geschlossen. Notwendige Wartung gehört zum CTO.</p>
+<p>Für ein echtes Interessenten-Vorgespräch kann der Consultant die Marketplace-Skills <code>interview-script</code> und <code>summarize-interview</code> aus <code>~/pm-skills/pm-product-discovery/skills/</code> nutzen. Gesprächsnotizen und personenbezogene Details bleiben ausschließlich in der privaten Klientenablage.</p>
+<p>Technischer Bereich: <a href="../coach/">Coach-Tool</a>. Produkt- und CI-Berichte liegen in den jeweiligen VitalOS-Boards und werden nicht in dieses Praxisboard kopiert.</p>
+<h3>Status und Kapazität</h3>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Spur</th>
+<th>Belegt</th>
+<th>Deckel</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Einzelbegleitungen</td>
+<td>1</td>
+<td>6</td>
+<td>offen</td>
+</tr>
+<tr>
+<td>Kurs</td>
+<td>0</td>
+<td>1</td>
+<td>inaktiv (kein Auftrag, keine nachweisbare Nachfrage)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Kurse und Sichtbarkeit bleiben inaktiv, bis ein klarer Auftrag oder echte Nachfrage vorliegt. Angebotsoptionen werden vorbereitet, nicht entschieden.</p>
+<h3>Laufende Begleitungen</h3>
+<p>Nur anonymisierte IDs (<code>K-01</code>, <code>K-02</code>, …). Keine Klartext-Namen, keine personenbezogenen Daten.</p>
+<p>Rhythmus und Lage jeder Begleitung stehen automatisch unter <strong>Trainingsrhythmus (automatisch)</strong>. Thema, Stundenziel und Termin trägt der Consultant hier von Hand nach.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Laufendes Thema</th>
+<th>Nächstes Stundenziel + Gewohnheit</th>
+<th>Nächster Termin</th>
+<th>Nächster Schritt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>—</td>
+<td><em>Platzhalter — keine echte Begleitung, nicht belegen</em></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p>&lt;!-- coach-report:start --&gt;</p>
+<h3>Trainingsrhythmus (automatisch)</h3>
+<p>Stand 2026-11-13 · erzeugt von <code>coaching/report.py</code> aus den lokalen Trainingslogs · anonymisiert · nicht von Hand ändern.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Spur</th>
+<th>Einheiten</th>
+<th>Rhythmus</th>
+<th>Letzte Einheit</th>
+<th>Pause</th>
+<th>Lage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>K-01</td>
+<td>Einzelbegleitung</td>
+<td>22</td>
+<td>1.7/Woche</td>
+<td>2026-10-28</td>
+<td>16 Tage</td>
+<td>überfällig</td>
+</tr>
+<tr>
+<td>T-01</td>
+<td>Testperson</td>
+<td>6</td>
+<td>0.5/Woche</td>
+<td>2026-10-24</td>
+<td>20 Tage</td>
+<td>überfällig</td>
+</tr>
+<tr>
+<td>T-02</td>
+<td>Testperson</td>
+<td>1</td>
+<td>0.1/Woche</td>
+<td>2026-09-20</td>
+<td>54 Tage</td>
+<td>überfällig</td>
+</tr>
+</tbody>
+</table></div>
+<p>Lage: bis 7 Tage im Rhythmus, 8–14 Tage fällig, ab 15 Tagen überfällig. Testpersonen zählen nicht in den Deckel.</p>
+<p>Interessenten (Anfrage, kein Platz): 1
+&lt;!-- coach-report:end --&gt;</p>
+<h3>Signale von Testpersonen</h3>
+<p>Testpersonen sind nur Signale. Sie zählen nicht als Platz im Deckel.</p>
+<p>Derzeit keine dokumentierten Signale.</p>
+<h3>Angebotsoptionen in Vorbereitung (nicht entschieden)</h3>
+<p>Nur vorbereitet, nicht entschieden. Details stehen in den Quellen, nicht hier.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Quelle</th>
+<th>Stand</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1:1-Paket / Multi-Session (Gate Beachhead Wien)</td>
+<td><span class="unpublished">Preis-Research 2026-11-11</span></td>
+<td>nicht entschieden</td>
+</tr>
+<tr>
+<td>Pilot „vitalos Start“, 6 Wochen, 1:1 mit App als Merkzettel</td>
+<td><span class="unpublished">Pilot-Formate 2026-11-12</span></td>
+<td>nicht entschieden</td>
+</tr>
+<tr>
+<td>B2B „Office-Vital“, getrennt vom 1:1-Pilot</td>
+<td><span class="unpublished">Firmenfitness 2026-11-12</span> · <span class="unpublished">vos#11</span></td>
+<td>nicht entschieden</td>
+</tr>
+</tbody>
+</table></div>
+<p>Preis, Recht (Gewerbe, BGF) und Außenwirkung sind Owner-Gates und laufen über Ilse / Shadow-CEO.</p>
+<h3>Offene Fragen an Daniel</h3>
+<p>Maximal 3. Owner-Gates (Trennen/Fertig, Ausgaben, Recht, Gesicht nach außen, grundlegende Richtungsänderung) gehen an Ilse / Shadow-CEO, nicht direkt hierher.</p>
+<p>Derzeit keine offenen Fragen.</p>
+<h3>Stunden-Vorlage</h3>
+<p>Jede Stunde folgt denselben fünf Teilen und endet mit genau einem mitnehmbaren Ziel und einer Gewohnheit danach.</p>
+<ol>
+<li><strong>Alltag</strong> — Was die Person gerade trägt: Zeit, Umfeld, Routinen.</li>
+<li><strong>Atmung</strong> — Kurzer Check und ein praktikabler Anker.</li>
+<li><strong>Haltung</strong> — Körperliche und innere Haltung, in der Stunde sichtbar und korrigierbar.</li>
+<li><strong>Belastung</strong> — Die eigentliche Arbeit, dosiert auf den Alltag.</li>
+<li><strong>Erholung</strong> — Abschluss und was bis zur nächsten Stunde gilt.</li>
+</ol>
+<p>Mitnehmen:</p>
+<ul>
+<li><strong>Ziel der Stunde:</strong> ein Satz, den die Person mitnimmt.</li>
+<li><strong>Gewohnheit danach:</strong> eine konkrete, kleine Handlung bis zur nächsten Stunde.</li>
+<li>Die App ist nur Merkzettel für Ziel und Gewohnheit, nicht die Stunde selbst.</li>
+</ul>
+<h3>Wie dieses Board aktuell bleibt</h3>
+<ul>
+<li>Der Individual Consultant aktualisiert diese Datei bei jedem Coaching-Ereignis: neue oder beendete Begleitung, gehaltene Stunde, neuer Termin, neues Signal, geänderte Angebotsvorbereitung, neue Frage an Daniel.</li>
+<li>Kapazität immer als „x von 6“ bzw. „x von 1“ führen. Testpersonen zählen nicht in den Deckel.</li>
+<li>Keine Klartext-Klientendaten. IDs nur <code>K-01</code>, <code>K-02</code>, …</li>
+<li>Verwandte Produkt- und Dev-Boards verlinken, nicht kopieren.</li>
+<li>Das Datum unter <strong>Stand</strong> nachziehen (Zeitzone Europe/Vienna).</li>
+<li>Registriert in <a href="../">org/DASHBOARDS.md</a>.</li>
+</ul>
+</div>
+</section>
+</main>
+<footer>
+<p>Quelle: coaching/DASHBOARD.md (Trainingsrhythmus automatisch aus coaching/report.py).</p>
+</footer>
+</div>
+</body>
+</html>
