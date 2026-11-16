@@ -249,3 +249,16 @@ footer {
 
 td, th { font-variant-numeric: tabular-nums; }
 h2 { text-wrap: balance; }
+
+/* Shared dashboard navigation and embedded views. */
+[hidden] { display: none !important; }
+.hub-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-block: 1.5rem; }
+.hub-tabs a, .hub-reader button, .hub-reader a {
+  padding: 0.55rem 0.8rem; border: 1px solid currentColor; border-radius: 0.5rem;
+  font: inherit; text-underline-offset: 0.2em;
+}
+.hub-tabs a[aria-current="page"] { background: #dff4e8; color: #173b2b; text-decoration: none; }
+.hub-reader > div { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.75rem; }
+.hub-reader button { cursor: pointer; background: transparent; color: inherit; }
+.hub-reader iframe { display: block; width: 100%; min-height: 76vh; border: 1px solid currentColor; border-radius: 0.5rem; }
+.hub-panel :is(h3, h4) { scroll-margin-block: 1rem; }
