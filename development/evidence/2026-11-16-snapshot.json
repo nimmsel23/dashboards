@@ -1,0 +1,490 @@
+{
+  "checkedAt": "2026-11-16T09:31:19.884Z",
+  "baselineSiteCommit": "d919c0f86400f529fe7c0d629924eb9632bf443a",
+  "metaCommit": "6bb6b084198b0195219a4166f1058a46d45183d8",
+  "tasks": [
+    [
+      "Produkt",
+      "Produktstrategie V1.3.0 freigegeben",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "V1.3.0 ist im Meta-Repo weiterhin die freigegebene Strategie. Neuere Produkt-/Geschäftsprioritäten in der öffentlichen Rollenübersicht setzen Store und Feature-Roadmap hinter belegte Nachfrage. Eine neuere Strategieversion liegt im geprüften Meta-Tree nicht vor.",
+      "Bestehendes Werkzeug im Coaching nutzen; Store-Roadmap erst nach erfülltem Geschäftsgate aktivieren.",
+      "AGENTS.md; dashboards/gh-pages/vitalos/index.html · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Produkt",
+      "Observe / Free definiert",
+      "Erledigt",
+      "P1",
+      "Observe",
+      "Manueller Journal-/Skill-Kern bleibt Free. Die Scope-Spezifikation nennt 1 KI-Analyse pro Tag als Ziel; im dokumentierten Store-Build ist KI nicht aktiviert. Tags lösen keine Analyse aus.",
+      "Manuellen Tages- und Wochenablauf am integrierten Build abnehmen; KI nicht als live versprechen.",
+      "prod/docs/SCOPE-OBSERVE-V1.md; DATA-SAFETY-ANSWERS.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Produkt",
+      "Operate / Premium definiert",
+      "Erledigt",
+      "P1",
+      "Operate",
+      "Operate ist die Premium-Edition derselben prod-Shell. Editionen sind in prod/src/shell/productEdition.js umgesetzt; ein UI-Modus beweist weder Kauf noch serverseitiges Entitlement.",
+      "Preis, Kontingent und Zahlungsweg erst im freigegebenen Premium-Vorhaben entscheiden.",
+      "prod/src/shell/productEdition.js; SCOPE-OBSERVE-V1.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Produkt",
+      "Durchgängigen Tagesablauf abnehmen",
+      "Offen",
+      "P1",
+      "Beide",
+      "Manueller Kern, Suche, Wochenbilanz und Voice-Reflexion liegen im integrierten Journal-Pin. Eine vollständige native Abnahme des aktuellen Gesamtstands ist daraus nicht belegt.",
+      "Bei freigegebener Geräteabnahme Login, Eintrag, Wiederfinden, Offline-Verhalten und Kontolöschung protokollieren.",
+      "journal-app@04836dc; prod/docs/NATIVE-HEALTH-PROFILE.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Produkt",
+      "Wochenbilanz und Voice in Quelle integriert",
+      "Erledigt",
+      "P2",
+      "Beide",
+      "Wochenbilanz mit Habit-Auswertung und Wochenspiegel sowie regelbasierte Voice-Reflexion am integrierten journal-app-Pin 04836dc gelesen. Das ersetzt die frühere Aussage „Umsetzung nicht bestätigt“. Keine Geräte- oder KI-Abnahme.",
+      "Kein erneuter Implementierungsauftrag; Verhalten im nächsten freigegebenen Nutzertest prüfen.",
+      "journal-dev@04836dc: JournalV2Range.jsx, VoicePanel.jsx, habitsToday.js · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Technik",
+      "React · pnpm · Firebase Hosting",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "React-/pnpm-Workspace mit gemeinsamer Lockdatei, privater Root-Shell und getracktem Produktbereich prod/. Beide verwenden dieselben neun Root-Gitlinks. Firebase Hosting und Sites sind getrennte Ziele.",
+      "Bei Releases den Gesamtcommit und die tatsächlich eingebundenen App-Pins dokumentieren.",
+      "README.md; AGENTS.md; .gitmodules · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Technik",
+      "Firestore eur3 · Google Auth",
+      "Erledigt",
+      "P0",
+      "Beide",
+      "Firestore eur3, Firebase Auth und Google-Login sind im Produkt-Runbook dokumentiert. Datenbankstandort, Functions-Region und Vertex-Region sind verschiedene Angaben. Native Google-Anmeldung bleibt separat nachzuweisen.",
+      "Login und Datenisolation auf dem vorgesehenen Release-Artefakt prüfen.",
+      "prod/docs/FIREBASE.md; DATA-SAFETY-ANSWERS.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Technik",
+      "Firebase Blaze aktiviert",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "Am 05.11. wurde VitalOS auf Blaze umgestellt und Cloud Billing verknüpft. Dies belegt noch keine serverseitige KI-Implementierung.",
+      "Budgetwarnungen und tatsächliche Kosten prüfen.",
+      "Firebase-Benachrichtigung · im Verlauf ermittelt",
+      "05.11.2026"
+    ],
+    [
+      "Technik",
+      "Meta-Stand und alle neun Produkt-Pins geprüft",
+      "Erledigt",
+      "P0",
+      "Beide",
+      "Meta-master 6bb6b08 gelesen. journal-app pinnt journal-dev@04836dc. Alle neun Gitlinks und Ursprünge sind zugänglich. Observe/Operate liegen als Editionen unter prod/src/shell; vos-observe ist zusätzlich ein älterer PWA-Prototyp im Meta-Repo. Keine separaten vos-Repositories erforderlich.",
+      "Pins unter Stack & Varianten ansehen; neuere Upstream-Commits nicht als integriert zählen.",
+      ".gitmodules; Git-Tree master; productEdition.js · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Technik",
+      "Smart Logging serverseitig absichern",
+      "Unbekannt",
+      "P0",
+      "Beide",
+      "Korrektur zum 09.11.: Die neueren Scope-/Data-Safety-Unterlagen beschreiben keine aktive KI im Store-Produkt. Der gelesene Vertex-Adapter gibt für Produktbuilds null zurück. Die frühere Deployment-Meldung bleibt historisch, bestätigt aber keinen aktuellen Produkt-End-to-End-Lauf.",
+      "Vor späterer Operate-Freigabe tatsächlichen Functions-Stand, Einwilligung, Kosten und Tagesbudget prüfen; bis dahin keinen Live-KI-Anspruch.",
+      "SCOPE-OBSERVE-V1.md; DATA-SAFETY-ANSWERS.md; firebaseVertexaiCompat.js · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Technik",
+      "Offline-Sync und Datenisolation",
+      "Unbekannt",
+      "P0",
+      "Beide",
+      "Offline-Cache bleibt dokumentiert. Für deleteOwnAccount nennt DATA-SAFETY-ANSWERS einen erfolgreichen Wegwerfkonto-Test am 12.11. Vollständige Offline-/Zwei-Nutzer-Abnahme des aktuellen Pins ist damit nicht belegt.",
+      "Offene Offline- und Isolationsfälle getrennt vom bereits dokumentierten Löschtest abnehmen.",
+      "prod/docs/DATA-SAFETY-ANSWERS.md; FIREBASE.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Rechtliches",
+      "Datenschutzerklärung erstellt",
+      "Erledigt",
+      "P0",
+      "Beide",
+      "Datenschutz-URL ist im Produkt auf https://vitalos.at/vitalos/datenschutz vereinheitlicht. Die Datenfluss-Dokumentation wurde ergänzt. Erstellung und Verlinkung sind belegt; Live-Erreichbarkeit und Abdeckung des neuen Health-Imports bleiben offen.",
+      "Vor einem neuen Store-Build Gesundheitsimport und tatsächlich ausgelieferte SDKs mit der öffentlichen Erklärung abgleichen.",
+      "prod/docs/DATA-SAFETY-ANSWERS.md; FIREBASE.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Rechtliches",
+      "Impressum: aktueller Live-Stand ungeprüft",
+      "Unbekannt",
+      "P0",
+      "Beide",
+      "Die frühere Platzhalter-Meldung stammt aus dem gespeicherten Stand vom 09.11. Neuere Projektunterlagen dokumentieren eine freigegebene Kontakt-/Ortsangabe; das aktuelle Live-Impressum konnte nicht geladen werden. Eine weiterhin fehlende Anschrift wird nicht ungeprüft behauptet.",
+      "Bei nächster Website-Prüfung den tatsächlichen Impressumsinhalt und Betreiberangaben bestätigen.",
+      "FIREBASE.md; Live-Abruf am 16.11. nicht möglich · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Rechtliches",
+      "Kontolöschung implementiert und Test dokumentiert",
+      "Erledigt",
+      "P0",
+      "Beide",
+      "In-App-Einstieg, öffentliche Löschseite und deleteOwnAccount sind implementiert. DATA-SAFETY-ANSWERS dokumentiert am 12.11. den Function-Deploy und einen erfolgreichen Wegwerfkonto-End-to-End-Test. Kein eigener Cloud-Test in diesem Lauf.",
+      "Keinen erneuten Implementierungsauftrag erzeugen; Live-URL und Regression des späteren Release-Kandidaten prüfen.",
+      "prod/docs/DATA-SAFETY-ANSWERS.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Rechtliches",
+      "Datenflüsse und Fristen klären",
+      "Offen",
+      "P0",
+      "Beide",
+      "Datenarten, SDKs, Löschpfade und KI-Abgrenzung sind in DATA-SAFETY-ANSWERS beschrieben. Neu: Health-Profilimport ab 14.11.; die öffentliche Erklärung und Console-Angaben müssen zum neuen Bundle passen. Aufbewahrungs-/Backup-Nachweise sind hier nicht vollständig geprüft.",
+      "Health-Angaben und Retention am konkreten Build abgleichen.",
+      "prod/docs/DATA-SAFETY-ANSWERS.md; NATIVE-HEALTH-PROFILE.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Domains/Webseiten",
+      "Beide Domains gekauft",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "vitalos.at und daniel-nimmrichter.at sind für ein Jahr registriert. vitalos.at laut Bestellverlauf ohne automatische Verlängerung.",
+      "Verlängerung im Registrar-Konto prüfen und einplanen.",
+      "Bestätigung im Verlauf · 03.11.2026",
+      "03.11.2026"
+    ],
+    [
+      "Domains/Webseiten",
+      "Produkt- und Personenseite vorhanden",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "VitalOS-Produktseite in Sites; persönliche Seite daniel-nimmrichter.at und Vitaltrainer-Angebot separat. Veröffentlichung im Verlauf gemeldet.",
+      "Aktuelle Domain-Zuordnung und Verlinkung kontrollieren.",
+      "Veröffentlichungsmeldungen 03.–04.11.",
+      "04.11.2026"
+    ],
+    [
+      "Domains/Webseiten",
+      "DNS, TLS und Domain-Nachweis",
+      "Unbekannt",
+      "P0",
+      "Beide",
+      "Direkte Abrufe der Produkt-Rechtsseiten, Löschseite und daniel-nimmrichter.at waren am 16.11. über das Recherchewerkzeug nicht möglich. Das ist kein Ausfallnachweis. DNS, TLS, Registrar- und Play-Domainnachweis wurden nicht live geprüft.",
+      "Erreichbarkeit und Besitznachweis bei verfügbarem Domain-/Console-Zugriff prüfen.",
+      "Abrufversuche 16.11.2026 · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Domains/Webseiten",
+      "Rechtliche URLs kontrollieren",
+      "Offen",
+      "P0",
+      "Beide",
+      "Kanonische Datenschutz-URL, Hosting-Redirect /datenschutz und /konto-loeschen sind im Repo dokumentiert. Die neueren URLs ersetzen die alten pauschalen Routenannahmen. Aktuelle HTTP-Antworten konnten nicht verifiziert werden.",
+      "vitalos.at/vitalos/datenschutz, Impressum und vitalos.web.app/konto-loeschen ohne Login prüfen.",
+      "prod/docs/FIREBASE.md; PLAY-CLOSED-TEST-CLICKLIST.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Google Play",
+      "Entwicklerkonto & Gebühr",
+      "Erledigt",
+      "P0",
+      "Beide",
+      "Am 03.11.2026 erstellt und Registrierungsgebühr bezahlt. Kein Nachweis für abgeschlossene Identitätsprüfung oder Production Access.",
+      "Console-Verifikationsstatus erfassen.",
+      "Nutzerbestätigung 03.11.2026",
+      "03.11.2026"
+    ],
+    [
+      "Google Play",
+      "App-Eintrag dokumentiert; Console-Status unbekannt",
+      "Unbekannt",
+      "P0",
+      "Beide",
+      "Die aktuelle Klickliste dokumentiert den bestehenden Play-App-Eintrag com.vitalos.app und C-001 als erledigt. Console-Verifikation, Testtrack, Tester und Produktionszugang sind weiterhin nicht direkt zugänglich oder belegt.",
+      "Nur verbleibende Console-Zustände erfassen, wenn der Store-Auftrag wieder freigegeben ist.",
+      "prod/docs/PLAY-CLOSED-TEST-CLICKLIST.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Google Play",
+      "Debug-APK und signierte AAB dokumentiert",
+      "Erledigt",
+      "P0",
+      "Beide",
+      "Neu gegenüber dem 09.11.: Die Klickliste dokumentiert ein lokal signiertes AAB vom 12.11. mit Hash und Signaturprüfung, versionCode 1. Nachfolgende Änderungen einschließlich Health-Import sind dadurch nicht als Release-Bundle abgenommen.",
+      "Bei späterer Release-Freigabe neuen Gesamtstand, Buildnummer und Artefaktnachweis gemeinsam festhalten.",
+      "prod/docs/PLAY-CLOSED-TEST-CLICKLIST.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Google Play",
+      "Store-Angaben und Testfreigabe",
+      "Offen",
+      "P0",
+      "Beide",
+      "Feature Graphic und vier Phone-Screenshots liegen laut Branding-README vor; sie zeigen lokale Shell-/Leerzustände, keine angemeldete Geräteabnahme. Data-Safety-Antworten und Prüferanleitung sind vorbereitet. Console-Einreichung bleibt unbelegt.",
+      "Vor dem nächsten autorisierten Upload Grafiken, Health-Angaben und Formulare auf den tatsächlichen Build abstimmen.",
+      "prod/branding/store/README.md; DATA-SAFETY-ANSWERS.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Google Play",
+      "Produktionsveröffentlichung",
+      "Blockiert",
+      "P0",
+      "Beide",
+      "Kein Store-Upload oder veröffentlichter Track belegt. Die aktuelle öffentliche Rollenübersicht stellt Play-Veröffentlichung und Feature-Roadmap hinter belegte Nachfrage und eine bewusste Freigabe. Dieses Dashboard öffnet das Gate nicht.",
+      "Kein Upload-Auftrag aus diesem Status. Erst Geschäftsgate und Release-Abnahme belegen.",
+      "dashboards/gh-pages/vitalos/index.html; PLAY-CLOSED-TEST-CLICKLIST.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Monetarisierung",
+      "Freemium-Modell festgelegt",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "Observe und Operate sind Free-/Premium-Zugänge eines Produkts. V1.3.0 ist freigegeben. 6,90 und 9,90 Euro pro Monat sind Testvarianten; 300 Logs sind eine frühere Hypothese. Coaching-Umsatz wird separat betrachtet.",
+      "Kosten je erfolgreicher Analyse und Zahlungsbereitschaft messen.",
+      "GitHub vitalos@a1b762e · Prüfung 09.11.2026 · V1.3.0",
+      "09.11.2026"
+    ],
+    [
+      "Monetarisierung",
+      "Zahlungsweg & Entitlements",
+      "Offen",
+      "P0",
+      "Operate",
+      "Stripe ist eine frühere Web-Hypothese, kein bestätigter Produkt-Zahlungsweg. Google Play Billing, Abostatus und serverseitige Entitlements sind eigenständige offene Produktarbeit. Edition-Umschalten beweist keine Kaufberechtigung.",
+      "Bei freigegebenem Premium-Vorhaben Zahlungsweg und serverseitige Rechte gemeinsam entscheiden.",
+      "CEO-STRATEGY-DELTA.md; productEdition.js · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Monetarisierung",
+      "Preis und Premium-Kontingent",
+      "Unbekannt",
+      "P1",
+      "Operate",
+      "Premium-Preis und Kontingent bleiben offen. V1.3.0 sieht Tests von 6,90 und 9,90 Euro vor. Modell-/Hostingkosten, Store-Auszahlung und Nachfrage sind zu messen; keine belegte Kostendeckung.",
+      "Pilotdaten sammeln und Kostenobergrenze definieren.",
+      "GitHub vitalos@a1b762e · Prüfung 09.11.2026 · V1.3.0",
+      "09.11.2026"
+    ],
+    [
+      "Technik",
+      "Aktueller Shell-Deploy und Live Smoke grün",
+      "Erledigt",
+      "P0",
+      "Beide",
+      "GitHub meldet für den aktuellen Meta-Commit 6bb6b08 sowohl Deploy VitalOS Shell als auch Live Smoke erfolgreich abgeschlossen. Dies belegt Shell-Workflows, keinen Produkt-Hosting-Deploy und keine Android-Abnahme.",
+      "Kein erneuter Lockfile-Fix-Auftrag; native und Produkt-Release-Belege separat führen.",
+      "Actions 43648400410 / 43648528786 · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Google Play",
+      "M1-RC Geräteabnahme",
+      "Offen",
+      "P0",
+      "Beide",
+      "Aktueller Meta-Pin ist neuer als das dokumentierte signierte AAB. Für den Health-Import nennt die Doku ausdrücklich offene Gerätefälle. Ein vollständiger angemeldeter aktueller Android-Durchlauf ist nicht belegt.",
+      "Bei Gerätefreigabe auch Ablehnen/Teilfreigabe, Accountwechsel und Offline-Speicherfehler prüfen.",
+      "prod/docs/NATIVE-HEALTH-PROFILE.md; PLAY-CLOSED-TEST-CLICKLIST.md · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Produkt",
+      "Feature-Freeze Fach-Apps beschlossen",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "Owner-Abnahme 08.11.: Fitness, Fuel, Relax, Plan und 6Pack bis 07.02.2027 nur Wartung mit Nutzerbezug. Neue Funktionen sind nicht freigegeben.",
+      "M1-RC und Testuser priorisieren; Kernablauf-Lücken dokumentieren.",
+      "vitalos Commit 3485b26 · E2",
+      "09.11.2026"
+    ],
+    [
+      "Monetarisierung",
+      "Coaching priorisiert; App-Umsatz nicht belegt",
+      "Offen",
+      "P1",
+      "Beide",
+      "Coaching ist eine eigenständige Umsatzspur; App-Premium darf daraus nicht als verkauft gelten. Die öffentliche Rollenübersicht priorisiert persönliche Leads und aktive Kanäle vor dem Store. Vertrauliche Klienten-, Finanz- und Org-Daten werden hier nicht übernommen.",
+      "Bestehendes Coaching-Angebot über persönliche Kontakte validieren; App-Arbeit an konkrete Nutzungssignale binden.",
+      "dashboards/gh-pages/vitalos/index.html · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Technik",
+      "Produktregressionen am aktuellen Pin unbelegt",
+      "Unbekannt",
+      "P0",
+      "Beide",
+      "Der alte Hinweis auf einen noch laufenden Journal-Deploy vom 09.11. ist veraltet und entfernt. journal-app ist jetzt auf 04836dc gepinnt. Einzelne Journal-Automationsläufe ersetzen keine Tests des Meta-Produkts; daraus wird kein neuer PR-/Merge-Auftrag abgeleitet.",
+      "Regressionsnachweis beim nächsten freigegebenen Produktbuild am Gesamtcommit führen.",
+      "journal-dev-Pin; GitHub Actions am geprüften Head · vitalos@6bb6b08 · geprüft 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Technik",
+      "PR #42 abgeschlossen",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "Live geprüft: closed, merged=true, Merge am 14.11.2026. Head ebadb1f; eine APPROVED-Review, keine ungelösten Review-Threads, zwei erfolgreiche Check Runs. Legacy-Status pending mit total_count=0 bedeutet keinen laufenden Check. Kein offener Meta-PR beim Abruf.",
+      "Keine Merge-Aktion erforderlich. Der aktuelle fitness-app-Pin 9c2e87a ist bereits neuer als der damalige Pin.",
+      "GitHub PR #42 / Reviews / Threads / Checks am exakten Head · 16.11.2026",
+      "16.11.2026"
+    ],
+    [
+      "Produkt",
+      "Freiwilliger Health-Profilimport in Quelle",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "Im Meta-Stand integriert: freiwilliger nativer Import von Größe/Gewicht, Vorschau und ausdrückliche Bestätigung. Kein Hintergrundsync. Implementierung ist kein Geräte- oder Store-Nachweis.",
+      "Offene native Gerätefälle im später freigegebenen Abnahmelauf prüfen.",
+      "prod/docs/NATIVE-HEALTH-PROFILE.md · vitalos@6bb6b08",
+      "16.11.2026"
+    ],
+    [
+      "Rechtliches",
+      "Health-Import vor Release deklarieren",
+      "Offen",
+      "P0",
+      "Beide",
+      "Neuer Datenfluss seit 14.11. verlangt Abgleich von öffentlicher Datenschutzerklärung, Health-Connect-/Data-Safety-Angaben und finalem Bundle. Eine Console-Einreichung ist nicht belegt.",
+      "Nur für den nächsten autorisierten Release den neuen Import in Erklärung und Formularen abbilden.",
+      "prod/docs/NATIVE-HEALTH-PROFILE.md; DATA-SAFETY-ANSWERS.md",
+      "16.11.2026"
+    ],
+    [
+      "Technik",
+      "Upstream-Stände getrennt vom Produkt-Pin",
+      "Erledigt",
+      "P1",
+      "Beide",
+      "Vergleich am 16.11.: fitness-dev master +2, skills-dev +1, relax-dev +2 und 6pack-dev +6 Commits gegenüber dem gespeicherten Gitlink. Journal und vier weitere Repos entsprechen dem Pin. Neuere Quelländerungen sind nicht im Meta-Stand integriert.",
+      "Keine automatische Pin-Aktualisierung; nur bei konkretem Produktbedarf und geprüftem Release übernehmen.",
+      ".gitmodules / Commit- und Compare-API · 16.11.2026",
+      "16.11.2026"
+    ]
+  ],
+  "changes": [
+    [
+      "16.11.",
+      "Meta-Stand und Pins geprüft",
+      "6bb6b08 mit neun zugänglichen Gitlinks. Journal 04836dc integriert; vier andere Master-Stände sind neuer als ihre Pins."
+    ],
+    [
+      "16.11.",
+      "PR #42 erledigt; keine Merge-Aufforderung",
+      "Merge vom 14.11. frisch geprüft, einschließlich Head, Reviews, Threads und Checks. Keine offenen Meta-PRs beim Abruf."
+    ],
+    [
+      "16.11.",
+      "Löschung und Store-Vorbereitung nachträglich belegt",
+      "Neuere Dokumente belegen Lösch-Function-Test, signiertes AAB und Store-Grafiken. Kein in diesem Lauf ausgeführter Build der App und kein Console-Upload."
+    ],
+    [
+      "16.11.",
+      "Health-Import erweitert den Prüfbedarf",
+      "Code/Runbook vom 14.11. vorhanden. Native Gerätefälle sowie öffentliche Datenschutz-/Console-Angaben bleiben offen."
+    ],
+    [
+      "16.11.",
+      "KI-Stand korrigiert",
+      "Neuere Scope- und Data-Safety-Doku beschreiben Store ohne aktive KI. Die frühere Deployment-Meldung aus KW 46 ist kein aktueller Endnachweis."
+    ],
+    [
+      "16.11.",
+      "Wochenbilanz und Voice bereits integriert",
+      "Dateien am gepinnten journal-app-Commit gelesen. Kein erneuter Implementierungsauftrag."
+    ],
+    [
+      "16.11.",
+      "Dashboard-Ablage zentralisiert",
+      "Website-/vos-Kopien nur zur Migration gelesen. Öffentliche Ausgabe enthält keine Mail-Links, Browserdaten, Klienten-/Finanzdaten oder Zugangsdaten."
+    ]
+  ],
+  "sources": [
+    [
+      "Meta-Stand und Submodule",
+      "https://github.com/nimmsel23/vitalos/tree/6bb6b084198b0195219a4166f1058a46d45183d8"
+    ],
+    [
+      "Submodul-Ursprünge",
+      "https://github.com/nimmsel23/vitalos/blob/6bb6b084198b0195219a4166f1058a46d45183d8/.gitmodules"
+    ],
+    [
+      "Observe / Operate Scope",
+      "https://github.com/nimmsel23/vitalos/blob/6bb6b084198b0195219a4166f1058a46d45183d8/prod/docs/SCOPE-OBSERVE-V1.md"
+    ],
+    [
+      "Firebase und URL-Zuordnung",
+      "https://github.com/nimmsel23/vitalos/blob/6bb6b084198b0195219a4166f1058a46d45183d8/prod/docs/FIREBASE.md"
+    ],
+    [
+      "Data Safety / dokumentierter Löschtest",
+      "https://github.com/nimmsel23/vitalos/blob/6bb6b084198b0195219a4166f1058a46d45183d8/prod/docs/DATA-SAFETY-ANSWERS.md"
+    ],
+    [
+      "Native Health-Gerätefälle",
+      "https://github.com/nimmsel23/vitalos/blob/6bb6b084198b0195219a4166f1058a46d45183d8/prod/docs/NATIVE-HEALTH-PROFILE.md"
+    ],
+    [
+      "Play-Vorbereitung, keine Einreichung",
+      "https://github.com/nimmsel23/vitalos/blob/6bb6b084198b0195219a4166f1058a46d45183d8/prod/docs/PLAY-CLOSED-TEST-CLICKLIST.md"
+    ],
+    [
+      "Store-Grafiken und Grenzen",
+      "https://github.com/nimmsel23/vitalos/blob/6bb6b084198b0195219a4166f1058a46d45183d8/prod/branding/store/README.md"
+    ],
+    [
+      "Journal am integrierten Pin",
+      "https://github.com/nimmsel23/journal-dev/tree/04836dc9938b3137f689c2c539c766a2843f3545"
+    ],
+    [
+      "PR #42 bereits gemergt",
+      "https://github.com/nimmsel23/vitalos/pull/42"
+    ],
+    [
+      "Shell-Deploy am Meta-Head",
+      "https://github.com/nimmsel23/vitalos/actions/runs/43648400410"
+    ],
+    [
+      "Öffentliche Rollenübersicht / Geschäftsgate",
+      "https://github.com/nimmsel23/dashboards/blob/9b40fde4a6b30a97e6dae2da38946a03bf5764b2/vitalos/index.html"
+    ]
+  ]
+}
