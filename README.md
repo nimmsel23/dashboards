@@ -7,6 +7,7 @@ Ab 13.11.2026 zentrale Ablage für Dashboard-Quellen und veröffentlichbare Ausg
 | Master / Coaching | [Master](index.html) | Bisher extern aus vos generiert |
 | Entwicklung (16.11.2026) | [Dashboard](development/index.html) | [React/Vite](development/source/) |
 | Fitness Produkt (CPO) | [Fitness](fitness-product/index.html) | [React/Vite](fitness-product/source/) |
+| Creator King | [Kursdashboard](creator-king/index.html) | [Kursarchiv](creator-king/Kursarchiv.md) |
 
 Neue Dashboards erhalten einen eigenen Ordner. Bestehende Kopien in Website- oder Rollen-Repositories nicht ohne abgestimmte Migration löschen. Rollen-Repositories können Mandat, Entscheidungen, Research und Backlog enthalten und auf ihr Dashboard hier verweisen; diese Rollenstruktur ist ein Vorschlag, noch keine durchgeführte Migration.
 
