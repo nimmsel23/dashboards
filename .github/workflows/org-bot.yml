@@ -1,0 +1,125 @@
+name: Org-Bot (PR anlegen & mergen)
+
+# Org-Autonomie + Merge-Klassen: org/DECISIONS/2026-11-16-merge-klassen.md
+# Einrichtung:   cto/tools/org-bot-setup.md
+# Braucht: Repo-Variable ORG_BOT_APP_ID, Secret ORG_BOT_PRIVATE_KEY.
+# Optional: Repo-Variable ORG_BOT_MODE = docs (Default) | code.
+# Ohne ORG_BOT_APP_ID tut der Workflow nichts.
+#
+# Sicherheit: pull_request_target läuft in der Version des Default-Branches.
+# Der PR-Code wird nie ausgecheckt oder ausgeführt; gelesen wird nur die
+# Dateiliste über die API.
+
+on:
+  push:
+    branches: ["codex/**", "claude/**", "cursor/**", "agent/**"]
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: org-bot-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  open-pr:
+    if: github.event_name == 'push' && vars.ORG_BOT_APP_ID != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: app
+        with:
+          app-id: ${{ vars.ORG_BOT_APP_ID }}
+          private-key: ${{ secrets.ORG_BOT_PRIVATE_KEY }}
+      - name: PR anlegen, falls noch keiner offen ist
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          BASE: ${{ github.event.repository.default_branch }}
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          set -euo pipefail
+          open=$(gh pr list -R "$REPO" --head "$BRANCH" --state open --json number -q 'length')
+          [ "$open" = "0" ] || { echo "PR existiert bereits."; exit 0; }
+          ahead=$(gh api "repos/$REPO/compare/$BASE...$BRANCH" -q '.ahead_by')
+          [ "$ahead" -gt 0 ] || { echo "Branch liegt nicht vor $BASE."; exit 0; }
+          title=$(printf '%s\n' "$MSG" | sed -n '1p')
+          [ -n "$title" ] || title="$BRANCH"
+          gh pr create -R "$REPO" --head "$BRANCH" --base "$BASE" --title "$title" \
+            --body "Automatisch vom Org-Bot angelegt (Branch \`$BRANCH\`). Klasse und Merge: siehe org/DECISIONS/2026-11-16-merge-klassen.md in vos."
+
+  classify-merge:
+    if: >-
+      github.event_name == 'pull_request_target' && vars.ORG_BOT_APP_ID != '' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft &&
+      (startsWith(github.event.pull_request.head.ref, 'codex/') ||
+       startsWith(github.event.pull_request.head.ref, 'claude/') ||
+       startsWith(github.event.pull_request.head.ref, 'cursor/') ||
+       startsWith(github.event.pull_request.head.ref, 'agent/') ||
+       startsWith(github.event.pull_request.head.ref, 'dependabot/'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: app
+        with:
+          app-id: ${{ vars.ORG_BOT_APP_ID }}
+          private-key: ${{ secrets.ORG_BOT_PRIVATE_KEY }}
+      - name: Klasse bestimmen und handeln
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          MODE: ${{ vars.ORG_BOT_MODE || 'docs' }}
+        run: |
+          set -euo pipefail
+          files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" -q '.[].filename')
+          labels=$(gh pr view "$PR" -R "$REPO" --json labels -q '.labels[].name')
+
+          class=A
+          [ "$MODE" = "code" ] && class=B
+          reason=""
+          # Sensible Pfade: immer Klasse B (Peer-Agent prüft), nie Owner.
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            case "$f" in
+              .github/workflows/*|firebase.json|.firebaserc|*/firebase.json|*/.firebaserc|\
+              *.env|*.env.*|*secret*|*Secret*|*credential*|*.pem|*.key|*keystore*|*.jks|\
+              AGENTS.md|org/OWNER-CONTRACT.md|dashboard/publish.sh|*datenschutz*|*privacy*)
+                class=B; reason="$reason $f";;
+            esac
+          done <<< "$files"
+          # Owner-Gate nur, wenn ein Agent den PR bewusst so markiert (Aktion außerhalb von nimmsel23).
+          printf '%s\n' "$labels" | grep -qx 'owner-gate' && class=C
+
+          ensure_label() { gh label create "$1" -R "$REPO" --color "$2" --description "$3" 2>/dev/null || true; }
+
+          if [ "$class" = "C" ]; then
+            echo "Label owner-gate: wartet auf CEO-Bündel, kein Merge."
+            exit 0
+          fi
+
+          if [ "$class" = "B" ] && ! printf '%s\n' "$labels" | grep -qx 'peer-ok'; then
+            ensure_label peer-ok 0E8A16 "Klasse B: von einem anderen Agenten als dem Autor geprüft"
+            if [ -n "$reason" ] && ! printf '%s\n' "$labels" | grep -qx 'needs-peer'; then
+              ensure_label needs-peer FBCA04 "Klasse B: braucht Prüfung durch einen anderen Agenten"
+              gh pr edit "$PR" -R "$REPO" --add-label needs-peer
+            fi
+            echo "Klasse B: wartet auf Label peer-ok.${reason}"
+            exit 0
+          fi
+
+          ensure_label "merge:$class" C2E0C6 "Vom Org-Bot gemergt (Klasse $class)"
+          gh pr edit "$PR" -R "$REPO" --add-label "merge:$class" || true
+          # Auto-Merge wartet auf Pflicht-Checks, wo Branch-Schutz sie verlangt.
+          # Code und sensible Pfade nie ohne Pflicht-Checks mergen: dort nur --auto.
+          if ! gh pr merge "$PR" -R "$REPO" --squash --auto --delete-branch; then
+            if [ "$class" = "A" ]; then
+              gh pr merge "$PR" -R "$REPO" --squash --delete-branch
+            else
+              echo "::warning::Auto-Merge nicht möglich (Branch-Schutz mit Pflicht-Checks fehlt?). Kein Direkt-Merge im Modus code."
+            fi
+          fi
