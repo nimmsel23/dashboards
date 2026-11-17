@@ -6,8 +6,6 @@
 <title>VitalOS · Vitaltrainer-Dashboard</title>
 <link rel="canonical" href="https://nimmsel23.github.io/dashboards/vitaltrainer/">
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="klienten.css">
-<script src="klienten.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#inhalt">Zum Inhalt</a>
@@ -21,12 +19,7 @@
 <a href="../coaching/">Coaching</a>
 <a href="../workspace/">Workspace-Hub</a><a href="../creator/">Creator</a><a href="../business/">Business</a><a href="../vitalos/">VitalOS</a><a href="../coach/">Coach-Tool</a>
 </nav>
-<nav class="hub-tabs" aria-label="Vitaltrainer-Bereiche">
-<a href="#auftrag" data-tab="auftrag">Auftrag &amp; Verantwortung</a>
-<a href="#klienten-gewinnen" data-tab="klienten-gewinnen">Klienten gewinnen</a>
-</nav>
 <main id="inhalt">
-<div id="auftrag" data-panel>
 <section aria-label="Bereichsauftrag"><div class="prose area-prose"><p><strong>Auftrag:</strong> Präventive Trainings- und Coaching-Angebote fachlich vorbereiten und in der Arbeit mit Klienten liefern.</p>
 <h3>Verantwortlich</h3>
 <p><code>angebot</code> verantwortet Angebotsbausteine, Preise und dazugehörige Recherche. <code>klienten</code> verantwortet die Vorbereitung und Nacharbeit konkreter Begleitungen. Pro Lieferstück wird einer der beiden als Owner benannt.</p>
@@ -37,63 +30,6 @@
 <h3>Marketplace-Methode</h3>
 <p>Für Angebotsarbeit: <code>pricing-strategy</code>, <code>ideal-customer-profile</code>, <code>customer-journey-map</code> und <code>gtm-strategy</code>. Für echte Klienteninterviews: <code>interview-script</code> und <code>summarize-interview</code>; Klientendaten bleiben in der privaten Klientenablage.</p>
 <p>Quelle: privater Workspace.</p></div></section>
-</div>
-<div id="klienten-gewinnen" data-panel>
-<section class="prose acquisition-intro" aria-labelledby="akquise-titel">
-<p class="eyebrow">Persönliche Kontakte · Empfehlungen · 0 € Werbebudget</p>
-<h2 id="akquise-titel">Klienten gewinnen</h2>
-<p>Aus einem guten Gespräch wird ein klarer nächster Schritt. Erst den Bedarf verstehen, dann eine passende Begleitung anbieten.</p>
-<p><strong>Wochenfokus:</strong> Drei passende persönliche Gespräche führen, vereinbarte Rückmeldungen erledigen und den nächsten Termin konkret machen. Die drei Gespräche sind ein Startziel, keine Erfolgszusage.</p>
-</section>
-<section class="prose" aria-labelledby="wochenplan-titel">
-<div class="acq-heading"><h2 id="wochenplan-titel">Diese Woche umsetzen</h2><span id="week-label"></span></div>
-<p class="acq-note">Häkchen bleiben nur in diesem Browser und gelten für die angezeigte Kalenderwoche. Ohne Namen oder Gesprächsinhalte.</p>
-<div class="acq-checks">
-<label><input type="checkbox" data-task="gespraech-1"> Persönliches Gespräch 1: Interesse und Trainingsziel verstehen</label>
-<label><input type="checkbox" data-task="gespraech-2"> Persönliches Gespräch 2: Interesse und Trainingsziel verstehen</label>
-<label><input type="checkbox" data-task="gespraech-3"> Persönliches Gespräch 3: Interesse und Trainingsziel verstehen</label>
-<label><input type="checkbox" data-task="nachfassen"> Vereinbarte Rückmeldungen erledigen</label>
-<label><input type="checkbox" data-task="termine"> Nächste Kennenlern- oder Trainingstermine vereinbaren</label>
-<label><input type="checkbox" data-task="rueckblick"> Wochenrückblick: Kennenlerngespräche, Neukunden und Verlängerungen prüfen</label>
-</div>
-<p id="week-progress" role="status" aria-live="polite"></p>
-<p id="storage-note" class="acq-note" hidden></p>
-<button type="button" id="reset-week">Wochenhäkchen zurücksetzen</button>
-</section>
-<section class="prose" aria-labelledby="ablauf-titel">
-<h2 id="ablauf-titel">Vom Kontakt zur Begleitung</h2>
-<div class="acq-grid">
-<article><span class="eyebrow">01 · Kontakt</span><h3>Zuhören und Interesse erkennen</h3><p>Bestehendes Umfeld, gemeinsame Aktivitäten und persönliche Empfehlungen nutzen. Einen hilfreichen Hinweis geben, wenn er willkommen ist.</p><p><strong>Nächster Schritt:</strong> Bei Interesse ein kurzes Kennenlernen und die gewünschte Kontaktaufnahme vereinbaren.</p></article>
-<article><span class="eyebrow">02 · Kennenlernen</span><h3>Den Bedarf klären</h3><p>Was möchte die Person erreichen? Was hat bisher gefehlt? Welche Trainingserfahrung und wie viel Zeit bringt sie mit?</p><p><strong>Nächster Schritt:</strong> Ziel und verfügbare Zeit zusammenfassen; offene Fragen klären.</p></article>
-<article><span class="eyebrow">03 · Angebot</span><h3>Eine passende Lösung anbieten</h3><p>THE FIRE als vierwöchigen Einstieg prüfen, wenn Ziel und Trainingsrhythmus passen. Betreuung, Leistungsumfang und Preis vor einer Zusage konkret erklären.</p><p><strong>Nächster Schritt:</strong> Starttermin oder einen vereinbarten Entscheidungstermin festhalten. Keine Preis- oder Ergebnisversprechen erfinden.</p></article>
-<article><span class="eyebrow">04 · Betreuung</span><h3>Fortschritte sichtbar machen</h3><p>Einheiten vorbereiten und kurz nachbereiten. Rückmeldung nach der ersten Einheit, zur Halbzeit und zum Abschluss vereinbaren.</p><p><strong>Nächster Schritt:</strong> Den nächsten Trainingstermin direkt gemeinsam festlegen.</p></article>
-<article><span class="eyebrow">05 · Empfehlung</span><h3>Auf Zufriedenheit aufbauen</h3><p>Beim Abschluss Fortschritte und sinnvolle Fortsetzung besprechen. Zufriedene Klienten um eine persönliche Vorstellung bitten, wenn jemand aus ihrem Umfeld Unterstützung sucht.</p><p><strong>Nächster Schritt:</strong> Verlängerung oder Einführung mit Einverständnis vereinbaren.</p></article>
-<article><span class="eyebrow">Firmenkontakte</span><h3>Über Menschen ins Unternehmen</h3><p>Über einen bestehenden Kontakt klären, wer ein Bewegungsangebot im Unternehmen entscheidet und welcher Bedarf besteht.</p><p><strong>Nächster Schritt:</strong> Ein kurzes Bedarfsgespräch anfragen; Format und Umfang eines möglichen Piloten erst danach festlegen.</p></article>
-</div>
-</section>
-<section class="prose" aria-labelledby="nachfassen-titel">
-<h2 id="nachfassen-titel">Nachfassen mit Anlass</h2>
-<ul><li><strong>Nach dem Kennenlernen:</strong> Ziel, offene Frage und vereinbarten nächsten Schritt aufgreifen.</li><li><strong>Nach einem Angebot:</strong> Zum gemeinsam vereinbarten Zeitpunkt nachfragen und Unklarheiten klären.</li><li><strong>Nach der ersten Einheit:</strong> Nach Erleben und Umsetzbarkeit fragen; nächste Einheit abstimmen.</li><li><strong>Zum Abschluss:</strong> Fortschritt gemeinsam bewerten und Fortsetzung oder Empfehlung besprechen.</li></ul>
-<p>Kein Interesse oder kein weiterer Kontakt gewünscht? Respektieren und die Kontaktaufnahme beenden.</p>
-</section>
-<section class="prose" aria-labelledby="routine-titel">
-<h2 id="routine-titel">ChatGPT als Arbeitsassistenz</h2>
-<div class="table-scroll"><table><thead><tr><th>Zeitpunkt</th><th>Deine Routine</th><th>ChatGPT unterstützt</th></tr></thead><tbody>
-<tr><td>Wochenstart · 20 Minuten</td><td>Kontakte und nächste Schritte prüfen.</td><td>Aus anonymisierten Notizen drei Prioritäten ableiten.</td></tr>
-<tr><td>Vor der Einheit · 5 Minuten</td><td>Letzte Rückmeldung und Schwerpunkt prüfen.</td><td>Deine Trainingsnotizen strukturiert aufbereiten.</td></tr>
-<tr><td>Nach der Einheit · 3 Minuten</td><td>Belastung, Rückmeldung und nächste Anpassung festhalten.</td><td>Eine kurze Verlaufsnotiz aus deinen Angaben erstellen.</td></tr>
-<tr><td>Wochenabschluss · 20 Minuten</td><td>Rückmeldungen, Termine und Abschlüsse prüfen.</td><td>Offene Schritte und nächste Woche zusammenfassen.</td></tr>
-</tbody></table></div>
-<details><summary>Arbeitsauftrag für den Wochenstart</summary><p id="weekly-prompt">Hier sind meine anonymisierten Kontakt- und Trainingsnotizen. Erstelle eine kurze Wochenübersicht: Wer braucht eine vereinbarte Rückmeldung, welche Einheiten muss ich vorbereiten und welche drei nächsten Schritte unterstützen meine Kundengewinnung? Kennzeichne fehlende Informationen und erfinde keine Zusagen, Preise oder Fortschritte.</p><button type="button" id="copy-prompt">Arbeitsauftrag kopieren</button><p id="copy-status" role="status" aria-live="polite"></p></details>
-<p>Du prüfst Trainingsentscheidungen und Nachrichten selbst und versendest sie persönlich.</p>
-</section>
-<section class="prose" aria-labelledby="uebersicht-titel"><h2 id="uebersicht-titel">Private Kontaktübersicht</h2>
-<p>In deiner privaten Ablage reichen diese Felder:</p><p><strong>Kürzel · Ziel · Status · letzter Kontakt · nächster Schritt · Datum</strong></p>
-<p>Status: Interessiert → Kennenlernen → Angebot → Aktiv → Abschluss. Nicht passende Kontakte abschließen.</p>
-<p><strong>Drei Kennzahlen:</strong> Geführte Kennenlerngespräche, zahlende Neukunden und Verlängerungen. Jede Woche prüfen, welcher nächste Schritt zu lange offen bleibt.</p>
-<p class="acq-note">Diese öffentliche Seite enthält nur den Ablauf. Kontaktdaten, Gesprächsnotizen und Gesundheitsinformationen bleiben in der privaten Ablage.</p>
-</section>
-</div>
 </main>
 <footer><p>Öffentliche Rollenübersicht. Personenbezogene Coaching- und Geschäftsdetails bleiben in ihren privaten Ablagen.</p></footer>
 </div>
