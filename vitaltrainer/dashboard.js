@@ -15,3 +15,4 @@
  document.querySelectorAll('[data-phase]').forEach(button=>button.addEventListener('click',()=>{const i=Number(button.dataset.phase),data=phases[i],panel=document.querySelector('#phase-content');document.querySelectorAll('[data-phase]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));panel.querySelector('.eyebrow').textContent=`0${i+1} / ${data[0]}`;panel.querySelector('h3').textContent=data[1];panel.querySelector('h3 + p').textContent=data[2];panel.querySelector('.next-step p').textContent=data[3];}));
  document.querySelector('#copy-prompt').addEventListener('click',async()=>{const status=document.querySelector('#copy-status');try{await navigator.clipboard.writeText(document.querySelector('#weekly-prompt').textContent);status.textContent='Arbeitsauftrag kopiert.'}catch{status.textContent='Bitte den Text oben markieren und manuell kopieren.'}});
 })();
+

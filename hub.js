@@ -18,3 +18,4 @@ if (headings.length === keys.length) {
  function render(){const legacy=boards.get(location.hash);if(legacy){location.replace(legacy);return;}const key=location.hash.slice(1).split('/')[0],current=sections.find(s=>s.key===key)||sections[0];for(const s of sections){s.panel.hidden=s!==current;if(s===current)s.link.setAttribute('aria-current','page');else s.link.removeAttribute('aria-current');}}
  window.addEventListener('hashchange',render);render();
 }
+
