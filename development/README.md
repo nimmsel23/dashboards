@@ -35,3 +35,10 @@ Die bestehende Site meldet access_mode=public, obwohl dieser Auftrag eine privat
 ## Linear
 
 Aufgabendetails können auf ein bestehendes Linear-Ticket verweisen. Die Zuordnung wird im jeweiligen Browser gespeichert. Für offene oder blockierte Punkte ohne Verknüpfung führt der Entwurfslink zu Linear. Er übergibt Titel, Bereich, Priorität, Quellenstand und die öffentliche Projektquelle. Die GitHub-Verbindung wird im Linear-Workspace konfiguriert.
+
+
+## Produktlinie und Zuständigkeit · 19.11.2026
+
+Dieses Board begleitet die Observe/Operate-App für Android und iOS einschließlich der Play-Store-Releasevorbereitung. CPO verantwortet Produktumfang, Free/Premium, Priorität und Release-Ziele. PM koordiniert freigegebene Arbeitspakete, Abnahmekriterien und Release-Abhängigkeiten. CTO und die einzelnen Dev-Linien liefern technische Umsetzung und Nachweise aus ihren vorhandenen Dev-Dashboards.
+
+Der integrierte App-Stand wird über den Commit des VitalOS-Metarepositories und seine gespeicherten Gitlinks belegt. Neuere Änderungen eines Dev-Repositories erhalten eine gesonderte Einordnung bis zur Integration. In den CPO-Überblick fließen Meilenstein, Abnahmestand, relevante Abhängigkeiten und konkret vorbereitete Produktentscheidungen. Der operative Arbeitsstatus liegt im bestehenden Linear-Projekt VitalOS App. Diese Zuordnung beschreibt Zuständigkeiten. Der Quellen-Audit oben behält sein eigenes Prüfdatum.

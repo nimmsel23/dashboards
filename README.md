@@ -5,7 +5,7 @@ Ab 13.11.2026 zentrale Ablage für Dashboard-Quellen und veröffentlichbare Ausg
 | Dashboard | Einstieg | Quellen |
 | --- | --- | --- |
 | Master / Coaching | [Master](index.html) | Bisher extern aus vos generiert |
-| Entwicklung (16.11.2026) | [Dashboard](development/index.html) | [React/Vite](development/source/) |
+| Observe / Operate · App-Entwicklung & Release (CPO / PM) | [Dashboard](development/index.html) | [React/Vite](development/source/) |
 | Fitness Produkt (CPO) | [Fitness](fitness-product/index.html) | [React/Vite](fitness-product/source/) |
 | Creator King | [Kursdashboard](creator-king/index.html) | [Kursarchiv](creator-king/Kursarchiv.md) |
 
