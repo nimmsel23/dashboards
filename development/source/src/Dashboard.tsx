@@ -436,6 +436,96 @@ function FitnessDashboard(){
  <section className="fitness-panel fitness-source"><div className="eyebrow">HERKUNFT & EINORDNUNG</div><h3>Aus Erfahrung mit Fitness-Apps entstanden.</h3><div className="fitness-tags">{['Madbarz','Thenics','6 Pack Promise','Strong'].map(x=><span key={x}>{x}</span>)}</div><p>Vom Gründer genannte Inspirationsquellen. Welche konkreten Funktionen übernommen oder verbessert werden sollen, ist noch zu klären; kein geprüfter Vergleich der Apps.</p><p><b>Quelle:</b> CPO-Gespräch in diesem Thread, 13.11.2026. Fitness ist Teil des VitalOS Skill Stacks. Die Zuordnung zu Observe/Free und Operate/Premium bleibt offen.</p><p><b>Wochenänderung · KW 46:</b> Ursprüngliche Fitness-Vision, Anfänger-Einstieg, freiwillige Detailtiefe, explizites Abhaken und zwei Trainingsmodi erstmals als Produktdashboard festgehalten.</p><p className="notice">Kein neuer Git-/Release-Abgleich für Fitness in dieser Ergänzung. Bestehende Projekt- und Wochenstände bleiben erhalten. Die Produktplanung ist keine Freigabe einer App-Implementierung oder einer Änderung des dokumentierten Feature-Freeze.</p></section>
  </div>
 }
+function LinearActions({ task, sourceUrl }: { task: Task; sourceUrl: string }) {
+  const storageKey = 'vitalos:linear:' + JSON.stringify([task.area, task.title]);
+  const [issueUrl, setIssueUrl] = useState('');
+  const [savedUrl, setSavedUrl] = useState('');
+  const [message, setMessage] = useState('');
+
+  function validatedIssueUrl(value: string) {
+    try {
+      const url = new URL(value.trim());
+      if (url.origin !== 'https://linear.app' || url.username || url.password) return '';
+      if (!/^\/[^/]+\/issue\/[A-Z0-9]+-\d+(?:\/[^/]+)?\/?$/i.test(url.pathname)) return '';
+      return url.origin + url.pathname;
+    } catch {
+      return '';
+    }
+  }
+
+  useEffect(() => {
+    try {
+      const url = validatedIssueUrl(localStorage.getItem(storageKey) ?? '');
+      setSavedUrl(url);
+      setIssueUrl(url);
+    } catch {
+      setMessage('Dieser Browser kann die Zuordnung nicht dauerhaft speichern.');
+    }
+  }, [storageKey]);
+
+  function saveLink(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const url = validatedIssueUrl(issueUrl);
+    if (issueUrl.trim() && !url) {
+      setMessage('Bitte einen Linear-Link im Format linear.app/workspace/issue/TEAM-123 einfügen.');
+      return;
+    }
+    setSavedUrl(url);
+    setIssueUrl(url);
+    try {
+      if (url) localStorage.setItem(storageKey, url);
+      else localStorage.removeItem(storageKey);
+      setMessage(url ? 'Ticket in diesem Browser verknüpft.' : 'Zuordnung entfernt.');
+    } catch {
+      setMessage('Die Zuordnung gilt nur, solange dieses Detail geöffnet ist.');
+    }
+  }
+
+  const draftUrl = new URL('https://linear.new/');
+  draftUrl.search = new URLSearchParams({
+    title: task.title,
+    description: [
+      'Bereich: ' + task.area + ' · Dashboard-Priorität: ' + task.p,
+      '',
+      'Quellenstand: ' + task.date,
+      'Projektquelle: ' + sourceUrl,
+    ].join('\n'),
+  }).toString();
+
+  return (
+    <section className="linear-actions" aria-label="Linear">
+      <h3>Linear</h3>
+      {savedUrl && <a href={savedUrl} target="_blank" rel="noopener noreferrer">In Linear öffnen ↗</a>}
+      <form onSubmit={saveLink}>
+        <label htmlFor="linear-issue-url">Vorhandenes Ticket verknüpfen</label>
+        <div className="linear-input-row">
+          <input id="linear-issue-url" type="url" value={issueUrl}
+            onChange={event => { setIssueUrl(event.target.value); setMessage(''); }}
+            placeholder="https://linear.app/…/issue/TEAM-123" />
+          <button type="submit">Speichern</button>
+          {savedUrl && <button type="button" onClick={() => {
+            setIssueUrl('');
+            setSavedUrl('');
+            try {
+              localStorage.removeItem(storageKey);
+              setMessage('Zuordnung entfernt.');
+            } catch {
+              setMessage('Die gespeicherte Zuordnung konnte nicht entfernt werden.');
+            }
+          }}>Entfernen</button>}
+        </div>
+      </form>
+      <p role="status">{message}</p>
+      {!savedUrl && (task.status === 'Offen' || task.status === 'Blockiert') && (
+        <>
+          <p>Vor dem Anlegen offene und geschlossene Tickets und PRs auf Duplikate prüfen.</p>
+          <a href={draftUrl.toString()} target="_blank" rel="noopener noreferrer">Linear-Ticket vorbereiten ↗</a>
+        </>
+      )}
+    </section>
+  );
+}
+
 export default function Dashboard(){const [view,V]=useState('Überblick'),[area,A]=useState('Alle Bereiche'),[priority,P]=useState('Alle Prioritäten'),[status,S]=useState('Alle Status'),[variant,F]=useState('Alle'),[query,Q]=useState(''),[selected,D]=useState<Task|null>(null),[week,W]=useState('Diese Woche');
 useEffect(()=>{if(window.location.hash==='#fitness')V('Fitness');},[]);
 const filtered=tasks.filter(t=>(area==='Alle Bereiche'||t.area===area)&&(priority==='Alle Prioritäten'||t.p===priority)&&(status==='Alle Status'||t.status===status)&&(variant==='Alle'||t.variant===variant||t.variant==='Beide')&&`${t.title} ${t.detail} ${t.area}`.toLowerCase().includes(query.toLowerCase()));
@@ -447,4 +537,4 @@ return <div className="shell"><aside className="sidebar"><a className="brand" hr
 {view==='Roadmap'&&<section className="roadmap"><p className="notice">Reihenfolge statt zugesagter Termine. Release-Gates gelten erst nach belegter Abnahme als erfüllt.</p>{phases.map(([num,title,when,ids])=>{const list=filtered.filter(t=>(ids as number[]).includes(t.id));return <details key={num as string} open={num==='01'}><summary><b className="phase">{num}</b><span><strong>{title}</strong><small>{when} · {list.length} passende Aufgaben</small></span><span className="chevron">⌄</span></summary><div className="phasebody">{list.length?list.map(row):<p>Keine passenden Aufgaben unter den aktuellen Filtern.</p>}<p className="accept"><b>Abnahme:</b> {num==='01'?'Commit, Datenpfade und Konto-/Domainstatus sind nachvollziehbar dokumentiert.':num==='02'?'Einträge bleiben nach Offline-Sync erhalten; erneute Übernahme erzeugt keine Duplikate.':num==='03'?'Testpaket, finale URLs und Console-Angaben sind vollständig geprüft.':num==='04'?'Tests und kontospezifische Freigaben sind abgeschlossen; Einreichung ist bestätigt.':'Berechtigungen, Kontingente, Zahlungsstatus und Fehlerfälle sind serverseitig geprüft.'}</p></div></details>})}</section>}
 {view==='Wochenansicht'&&<section className="week"><div className="sectiontitle"><h2>{week==='Archiv KW 45'?'02.–08. November · KW 45':week==='Archiv KW 46'?'09.–15. November · KW 46':'16.–22. November · KW 47'}</h2><select aria-label="Zeitraum" value={week} onChange={e=>W(e.target.value)}><option>Diese Woche</option><option>Seit letztem Quellenstand</option><option>Archiv KW 46</option><option>Archiv KW 45</option></select></div><p className="notice">Vergleich: zuletzt gespeicherte Site-Version 3 vom 13.11.2026 (Quellenbasis 09.11., Fitness-Ergänzung 13.11.) → Prüfung 16.11.2026. Archiv KW 45/46 zeigt den damaligen Wissensstand; historische Meldungen sind keine aktuellen Aufgaben. Neue Nachweise sind nicht heute ausgeführte App-Builds.</p>{(week==='Archiv KW 45'?history:week==='Archiv KW 46'?[...archive46,fitnessHistory]:changes).map(([d,t,b])=><div className="event" key={d+t}><time>{d}</time><span className="eventdot"/><div><h3>{t}</h3><p>{b}</p></div></div>)}<h2 className="weeksubtitle">{week.startsWith('Archiv')?'Historische Quellenlage · keine aktuellen Aufgaben':'Neu bewertete Aufgaben'}</h2>{!week.startsWith('Archiv')&&filtered.filter(t=>t.date==='16.11.2026').map(row)}<h2 className="weeksubtitle">Quellen & Prüfgrenzen</h2><ul>{evidence.map(([title,url])=><li key={url}><a href={url} target="_blank" rel="noreferrer">{title} ↗</a></li>)}</ul><p className="notice">GitHub-Quellen und alle neun Pins zugänglich. Kein direkter Zugriff auf Play Console, Firebase Console, Registrar, lokale Artefakte oder Testgeräte. Live-Webabrufe waren nicht möglich; daraus folgt kein Ausfall. Keine zusätzlichen Nachrichten oder persönlichen Browser-Einträge übernommen. Fehlende separate vos-Repositories sind kein Blocker. Preis-/Bedarfsannahmen und historische Angaben ohne neuen Nachweis bleiben als solche gekennzeichnet.</p></section>}
 {view==='Stack & Varianten'&&<><div className="variants">{[['Observe','FREE','Manueller Kern. KI als späteres Kontingent.','Ziel: 1 KI-Analyse/Tag; Store-KI derzeit nicht aktiv','prod/src/shell/productEdition.js · observe'],['Operate','PREMIUM','Gleiche Praxis. Mehr KI als Produktziel.','Premium-Kontingent noch offen','prod/src/shell/productEdition.js · operate']].filter(x=>variant==='Alle'||variant===x[0]).map(([name,label,desc,quota,repo])=><section className="variant" key={name}><span className="badge done">{label}</span><h2>{name}</h2><p>{desc}</p><ul><li>Journal, vier Deposits und manuelle Skills</li><li>Direkte Tags wie +hot</li><li>{quota}</li><li>Gemeinsame Speicher- und Punkteregeln</li></ul><code>{repo}</code></section>)}</div><section className="stack"><h2>Technische Basis</h2><div className="stackgrid">{[['Frontend','React · pnpm'],['Hosting','Firebase Hosting + Sites für Webseiten'],['Daten','Cloud Firestore · eur3'],['Identität','Google Login · Firebase Auth'],['Analyse','Vertex AI / Gemini · Store deaktiviert laut Quelle'],['Abrechnung','Blaze dokumentiert · Produkt-Zahlungsweg offen']].map(([a,b])=><div key={a}><small>{a}</small><strong>{b}</strong></div>)}</div><h2>Repositories & Zuständigkeit</h2>{[['journal-dev','Journal-Kern, Freitextanalyse, Vorschau und Übernahme','https://github.com/nimmsel23/journal-dev'],['vitalos','Meta-Repository, Integration und Skill-Submodule','https://github.com/nimmsel23/vitalos'],['vos-observe/','Historischer PWA-Prototyp im Meta-Repo; nicht die gemeinsame Store-Shell',''],['prod/src/shell/productEdition.js','Observe/Operate sind Editionen desselben Produkts','']].map(([r,d,url])=><div className="repo" key={r}><code>{url?<a href={url} target="_blank" rel="noreferrer">{r} ↗</a>:r}</code><span>{d}</span></div>)}<p className="notice">Quellprüfung 16.11.: Meta-master 6bb6b08. Die Tabelle trennt gespeicherte Gitlinks von den am Prüfungstag gelesenen master-Spitzen. Upstream-Fortschritt ist keine Produktintegration; Branch-Konfiguration ersetzt keinen Pin.</p><div className="pin-table"><table><caption>Alle neun Submodule · Prüfung 16.11.2026</caption><thead><tr><th>Meta-Pfad / Ursprung</th><th>Eingebunden</th><th>Upstream master</th><th>Vergleich</th></tr></thead><tbody>{pinAudit.map(p=><tr key={p.path}><td>{p.path}<small>{p.repo}</small></td><td><a href={`https://github.com/${p.repo}/commit/${p.pin}`} target="_blank" rel="noreferrer">{p.pin.slice(0,7)}</a></td><td><a href={`https://github.com/${p.repo}/commit/${p.upstream}`} target="_blank" rel="noreferrer">{p.upstream.slice(0,7)}</a></td><td>{p.ahead?`${p.ahead} neuere Commits · nicht integriert`:"identisch"}</td></tr>)}</tbody></table></div></section></>}
-</>}<footer>VitalOS · Aufmerksamkeit und Alltag bewusster steuern.<span>Stand 16.11.2026 · Quellenprüfung 16.11.2026</span></footer></div></main>{selected&&<div className="overlay" onClick={()=>D(null)}><section className="drawer" role="dialog" aria-modal="true" aria-label={selected.title} onClick={e=>e.stopPropagation()}><button className="close" aria-label="Details schließen" autoFocus onClick={()=>D(null)}>×</button><div className="eyebrow">{selected.area} / {selected.variant}</div><h2>{selected.title}</h2><div className="detailtags"><span className={'badge '+statusClass(selected.status)}>{selected.status}</span><span className="priority">{selected.p} · {selected.p==='P0'?'Release-relevant':selected.p==='P1'?'Hoch':'Später'}</span></div><h3>Aktueller Stand</h3><p>{selected.detail}</p><h3>Nächster Schritt</h3><div className="next">→ {selected.next}</div><h3>Nachweis & Einordnung</h3><p>{selected.source}</p><small>Quellen-/Prüfdatum: {selected.date}<br/>Stand zusammengetragen am 16.11.2026</small><p className="notice">„Erledigt“ bezieht sich nur auf den genannten Punkt. Verfügbarkeit und Umsetzung abhängiger Schritte sind separat ausgewiesen.</p><button className="primary" onClick={()=>D(null)}>Zurück zum Dashboard</button></section></div>}</div>}
+</>}<footer>VitalOS · Aufmerksamkeit und Alltag bewusster steuern.<span>Stand 16.11.2026 · Quellenprüfung 16.11.2026</span></footer></div></main>{selected&&<div className="overlay" onClick={()=>D(null)}><section className="drawer" role="dialog" aria-modal="true" aria-label={selected.title} onClick={e=>e.stopPropagation()}><button className="close" aria-label="Details schließen" autoFocus onClick={()=>D(null)}>×</button><div className="eyebrow">{selected.area} / {selected.variant}</div><h2>{selected.title}</h2><div className="detailtags"><span className={'badge '+statusClass(selected.status)}>{selected.status}</span><span className="priority">{selected.p} · {selected.p==='P0'?'Release-relevant':selected.p==='P1'?'Hoch':'Später'}</span></div><h3>Aktueller Stand</h3><p>{selected.detail}</p><h3>Nächster Schritt</h3><div className="next">→ {selected.next}</div><LinearActions key={selected.id} task={selected} sourceUrl={evidence[0][1]} /><h3>Nachweis & Einordnung</h3><p>{selected.source}</p><small>Quellen-/Prüfdatum: {selected.date}<br/>Stand zusammengetragen am 16.11.2026</small><p className="notice">„Erledigt“ bezieht sich nur auf den genannten Punkt. Verfügbarkeit und Umsetzung abhängiger Schritte sind separat ausgewiesen.</p><button className="primary" onClick={()=>D(null)}>Zurück zum Dashboard</button></section></div>}</div>}

@@ -31,3 +31,7 @@ TypeScript, Vinext- und Vite-Produktionsbuild sowie Browserprüfung von Priorit�
 Auf gh-pages fehlten am Beginn README und fitness-product/ gegenüber dem letzten bekannten Commit `01a9e66a37f2392e08f8c15ad516bcbd897cd996`. Die vorherige Fitness-Struktur wird unverändert aus ihrem Git-Tree additiv wiederhergestellt; aktuelle Ordner bleiben erhalten.
 
 Die bestehende Site meldet access_mode=public, obwohl dieser Auftrag eine private Veröffentlichung verlangt. Sites-Version 4 ist mit Quellcommit `e4ea897c27e7d21f5339104c114761159be8a5c1` und lokal gebautem Archiv erfolgreich gespeichert; keine öffentliche Neuveröffentlichung und keine stillschweigende Änderung der Zugriffsrechte. Der öffentliche Git-Export ist separat beauftragt und enthält ausschließlich veröffentlichbare Inhalte.
+
+## Linear
+
+Aufgabendetails können auf ein bestehendes Linear-Ticket verweisen. Die Zuordnung wird im jeweiligen Browser gespeichert. Für offene oder blockierte Punkte ohne Verknüpfung führt der Entwurfslink zu Linear. Er übergibt Titel, Bereich, Priorität, Quellenstand und die öffentliche Projektquelle. Die GitHub-Verbindung wird im Linear-Workspace konfiguriert.
