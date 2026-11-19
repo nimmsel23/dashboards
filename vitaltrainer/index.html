@@ -2,63 +2,43 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#173f35"><title>Vitaltrainer · Arbeitsdashboard</title>
+<meta name="theme-color" content="#182d31"><title>Vitaltrainer · Klienten gewinnen</title>
 <link rel="canonical" href="https://nimmsel23.github.io/dashboards/vitaltrainer/">
 <link rel="stylesheet" href="dashboard.css"><script src="dashboard.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#inhalt">Zum Inhalt</a>
-<aside class="sidebar">
-<a class="brand" href="#uebersicht"><span class="brand-mark" aria-hidden="true">V.</span><span>Vitaltrainer<small>DEIN ARBEITSDASHBOARD</small></span></a>
-<nav class="views" aria-label="Arbeitsbereiche">
-<a href="#uebersicht" data-view="uebersicht"><span aria-hidden="true">◫</span> Übersicht</a>
-<a href="#klienten-gewinnen" data-view="klienten-gewinnen"><span aria-hidden="true">↗</span> Klienten gewinnen</a>
-<a href="#auftrag" data-view="auftrag"><span aria-hidden="true">≡</span> Auftrag</a>
-</nav>
-<div class="side-footer"><a href="../">← Alle Dashboards</a><p>Persönlicher Kontakt.<br>Verlässliche Betreuung.</p></div>
-</aside>
-<div class="workspace">
-<header class="topbar"><a href="../">← Dashboards</a><span class="local-badge">Nur auf diesem Gerät</span></header>
-<main id="inhalt" tabindex="-1">
-<div class="page-heading"><div><p class="eyebrow">VITALTRAINER / <span id="view-caption">ÜBERSICHT</span></p><h1 id="page-title">Deine Woche im Blick.</h1></div><p id="week-label" class="week-label"></p></div>
-<p id="storage-note" role="status" class="notice" hidden>Der Browser kann nicht speichern. Änderungen gelten nur bis zum Neuladen.</p>
-<div id="uebersicht" data-panel>
-<div class="metrics" aria-label="Wochenstand">
-<a href="#klienten-gewinnen" class="metric"><span>Persönliche Gespräche</span><strong><span id="talk-count">0</span><small> / 3</small></strong><span class="metric-note">Dein Wochenziel</span><div class="meter" aria-hidden="true"><i id="talk-meter"></i></div></a>
-<a href="#klienten-gewinnen" class="metric"><span>Nachfassen</span><strong id="followup-state">Offen</strong><span class="metric-note">Vereinbarte Rückmeldungen</span></a>
-<a href="#klienten-gewinnen" class="metric"><span>Wochenschritte</span><strong><span id="task-count">0</span><small> / 6</small></strong><span class="metric-note">Von dir abgehakt</span></a>
+<header class="app-header"><a href="../" class="back">← Dashboards</a><strong>Vitaltrainer<span>Klienten gewinnen</span></strong><button type="button" id="backup-open" class="quiet">Sicherung</button></header>
+<main id="inhalt" data-app="client-pipeline">
+<div class="page-title"><div><p class="eyebrow">DEINE KONTAKTE. DEIN NÄCHSTER SCHRITT.</p><h1>Klienten gewinnen</h1><p id="today-label" class="muted"></p></div><button id="add-contact" type="button" class="primary">+ Kontakt erfassen</button></div>
+<div id="storage-error" class="alert" role="alert" hidden></div>
+<div id="conflict-error" class="alert" role="alert" hidden>Die Daten wurden in einem anderen Tab geändert. Deine offene Eingabe bleibt stehen. Schließe den Dialog und öffne den Kontakt erneut, bevor du speicherst.</div>
+<div class="summary" aria-label="Kontaktübersicht">
+<button type="button" data-scope="due" class="summary-item"><span id="count-due">0</span><div>Jetzt fällig<small>heute und überfällig</small></div></button>
+<button type="button" data-scope="open" class="summary-item"><span id="count-open">0</span><div>Offene Kontakte<small>Kontakt bis Angebot</small></div></button>
+<button type="button" data-scope="won" class="summary-item"><span id="count-won">0</span><div>Zusagen<small>von dir eingetragen</small></div></button>
 </div>
-<div class="dashboard-grid">
-<section class="focus-card" aria-labelledby="focus-title"><div class="card-kicker"><span class="eyebrow">DEIN NÄCHSTER SCHRITT</span><span class="dot" aria-hidden="true"></span></div><h2 id="focus-title">Ein persönliches Gespräch führen.</h2><p id="focus-description">Interesse erkennen, Trainingsziel verstehen und bei Bedarf ein Kennenlernen vereinbaren.</p><button class="primary" id="complete-next" type="button">Schritt erledigt <span aria-hidden="true">✓</span></button><a class="text-link" href="#klienten-gewinnen">Alle Wochenschritte ansehen →</a></section>
-<section class="card" aria-labelledby="rhythm-title"><div class="section-heading"><h2 id="rhythm-title">Dein Arbeitsrhythmus</h2><span class="pill">Schlank halten</span></div><ul class="rhythm"><li><span class="time">20 min</span><div><strong>Wochenstart</strong><p>Kontakte und drei nächste Schritte prüfen.</p></div></li><li><span class="time">5 + 3 min</span><div><strong>Rund ums Training</strong><p>Vorbereiten, kurz dokumentieren, nächsten Termin klären.</p></div></li><li><span class="time">20 min</span><div><strong>Wochenabschluss</strong><p>Rückmeldungen und Fortschritte durchgehen.</p></div></li></ul></section>
-</div>
-<section class="quick-section" aria-labelledby="quick-title"><h2 id="quick-title">Direkt weiterarbeiten</h2><div class="quick-grid"><a href="#klienten-gewinnen"><span class="quick-icon" aria-hidden="true">↗</span><div><strong>Klienten gewinnen</strong><p>Gespräche, Angebot und Nachfassen.</p></div><span aria-hidden="true">→</span></a><a href="../coaching/"><span class="quick-icon" aria-hidden="true">◷</span><div><strong>Coaching-Praxis</strong><p>Zum Dashboard für die Trainingsbetreuung.</p></div><span aria-hidden="true">→</span></a></div></section>
-<p class="footnote">Die Anzeigen basieren auf deinen Wochenhäkchen. Es werden keine Kontakte oder Umsätze automatisch abgerufen.</p>
-</div>
-<div id="klienten-gewinnen" data-panel>
-<div class="acquisition-layout">
-<section class="card weekly-card" aria-labelledby="tasks-title"><div class="section-heading"><h2 id="tasks-title">Diese Woche</h2><span id="week-progress" class="pill" role="status" aria-live="polite">0 / 6 erledigt</span></div><p class="muted">Drei passende Gespräche als Startziel. Persönlich, ohne Werbebudget.</p><div class="tasks">
-<label><input type="checkbox" data-task="gespraech-1"><span><strong>Gespräch 1 führen</strong><small>Interesse und Trainingsziel verstehen</small></span></label>
-<label><input type="checkbox" data-task="gespraech-2"><span><strong>Gespräch 2 führen</strong><small>Einen passenden nächsten Schritt anbieten</small></span></label>
-<label><input type="checkbox" data-task="gespraech-3"><span><strong>Gespräch 3 führen</strong><small>Auch persönliche Empfehlungen aufgreifen</small></span></label>
-<label><input type="checkbox" data-task="nachfassen"><span><strong>Vereinbarte Rückmeldungen erledigen</strong><small>Zum besprochenen Zeitpunkt nachfassen</small></span></label>
-<label><input type="checkbox" data-task="termine"><span><strong>Nächste Termine vereinbaren</strong><small>Kennenlernen oder Training konkret machen</small></span></label>
-<label><input type="checkbox" data-task="rueckblick"><span><strong>Wochenrückblick machen</strong><small>Kennenlerngespräche, Neukunden, Verlängerungen</small></span></label>
-</div><button type="button" class="subtle" id="reset-week">Wochenhäkchen zurücksetzen</button></section>
-<section class="card playbook" aria-labelledby="process-title"><div class="section-heading"><h2 id="process-title">Vom Kontakt zum Klienten</h2><span class="pill">5 Schritte</span></div><div class="process" role="group" aria-label="Gesprächsphase auswählen">
-<button type="button" data-phase="0" aria-pressed="true"><span>01</span>Kontakt</button><button type="button" data-phase="1" aria-pressed="false"><span>02</span>Kennenlernen</button><button type="button" data-phase="2" aria-pressed="false"><span>03</span>Angebot</button><button type="button" data-phase="3" aria-pressed="false"><span>04</span>Betreuung</button><button type="button" data-phase="4" aria-pressed="false"><span>05</span>Empfehlung</button>
-</div><div id="phase-content" class="phase-content" aria-live="polite"><p class="eyebrow">01 / KONTAKT</p><h3>Zuhören, Interesse erkennen.</h3><p>Bestehendes Umfeld, gemeinsame Aktivitäten und Empfehlungen nutzen. Einen hilfreichen Hinweis geben, wenn er willkommen ist.</p><div class="next-step"><span>NÄCHSTER SCHRITT</span><p>Bei Interesse ein kurzes Kennenlernen und die gewünschte Kontaktaufnahme vereinbaren.</p></div></div></section>
-</div>
-<div class="tools-grid">
-<details class="tool"><summary>Firmenkontakte aufbauen <span aria-hidden="true">+</span></summary><p>Über bestehende Kontakte klären, wer im Unternehmen über ein Bewegungsangebot entscheidet und welcher Bedarf besteht. Erst ein Bedarfsgespräch führen, dann Format und Umfang eines Piloten festlegen.</p></details>
-<details class="tool"><summary>Nachfassen &amp; Nachbetreuung <span aria-hidden="true">+</span></summary><ul><li>Nach dem Kennenlernen: Ziel und vereinbarten nächsten Schritt aufgreifen.</li><li>Nach dem Angebot: Zum vereinbarten Zeitpunkt offene Fragen klären.</li><li>Nach der ersten Einheit: Erleben und Umsetzbarkeit besprechen.</li><li>Zum Abschluss: Fortschritt und sinnvolle Fortsetzung klären.</li></ul><p>Kein weiterer Kontakt gewünscht? Die Kontaktaufnahme beenden.</p></details>
-<details class="tool"><summary>ChatGPT-Arbeitsauftrag <span aria-hidden="true">+</span></summary><p id="weekly-prompt">Hier sind meine anonymisierten Kontakt- und Trainingsnotizen. Erstelle eine kurze Wochenübersicht: Wer braucht eine vereinbarte Rückmeldung, welche Einheiten muss ich vorbereiten und welche drei nächsten Schritte unterstützen meine Kundengewinnung? Kennzeichne fehlende Informationen und erfinde keine Zusagen, Preise oder Fortschritte.</p><button type="button" class="secondary" id="copy-prompt">Arbeitsauftrag kopieren</button><p id="copy-status" role="status"></p></details>
-<details class="tool"><summary>Private Kontaktübersicht <span aria-hidden="true">+</span></summary><p>Kürzel · Ziel · Status · letzter Kontakt · nächster Schritt · Datum.</p><p>Interessiert → Kennenlernen → Angebot → Aktiv → Abschluss.</p><p>Diese Daten führst du in deiner privaten Ablage. Hier werden nur anonyme Wochenhäkchen gespeichert, keine Klientendaten.</p></details>
-</div>
-</div>
-<div id="auftrag" data-panel><section class="card mandate"><p class="eyebrow">VERANTWORTUNG &amp; ÜBERGABE</p><h2>Training vorbereiten. Begleitung liefern.</h2><p>Präventive Trainings- und Coaching-Angebote fachlich vorbereiten und in der Arbeit mit Klienten liefern.</p><dl><dt>Angebot</dt><dd>Angebotsbausteine, Preise und Recherche. Pro Lieferstück einen verantwortlichen Owner benennen.</dd><dt>Klienten</dt><dd>Vorbereitung und Nacharbeit konkreter Begleitungen. Klientendaten bleiben privat.</dd><dt>Übergabe</dt><dd>Vollständiger Entwurf mit Quellen und offenen Entscheidungen an Daniel. Rückfragen und Korrekturen übernimmt der Fach-Owner.</dd><dt>Freigabe</dt><dd>Kundenkontakt, Zusagen, Preise und Veröffentlichung entscheidet Daniel.</dd></dl><details><summary>Methoden &amp; Abschlusskriterium</summary><p>Ein prüfbares Angebots- oder Coaching-Artefakt liegt in der vorgesehenen Ablage. Für Angebotsarbeit: pricing-strategy, ideal-customer-profile, customer-journey-map und gtm-strategy. Für Klienteninterviews: interview-script und summarize-interview.</p></details></section></div>
-</main><footer>Öffentlicher Arbeitsrahmen · Häkchen bleiben in diesem Browser · Keine geräteübergreifende Synchronisierung</footer>
-</div>
-<noscript><p class="notice">JavaScript ist deaktiviert. Inhalte bleiben lesbar; Häkchen und Ansichtswechsel werden nicht gespeichert.</p></noscript>
+<section class="worklist" aria-labelledby="contacts-heading">
+<div class="list-heading"><h2 id="contacts-heading">Kontakte &amp; nächste Schritte</h2><span id="result-count" role="status" aria-live="polite"></span></div>
+<div class="controls"><nav class="scopes" aria-label="Kontakte filtern"><button type="button" data-scope="open" aria-pressed="true">Offen</button><button type="button" data-scope="due" aria-pressed="false">Fällig</button><button type="button" data-scope="all" aria-pressed="false">Alle</button><button type="button" data-scope="archived" aria-pressed="false">Archiv</button></nav><div class="filters"><label class="search"><span class="sr-only">Kontakte suchen</span><input id="search" type="search" placeholder="Kürzel, Firma oder nächster Schritt …" autocomplete="off"></label><label><span class="sr-only">Status filtern</span><select id="stage-filter"><option value="">Alle Status</option><option value="kontakt">Kontakt</option><option value="gespraech">Erstgespräch</option><option value="angebot">Angebot</option><option value="gewonnen">Zusage</option><option value="pausiert">Pausiert</option><option value="abgesagt">Abgesagt</option></select></label></div></div>
+<div class="column-head" aria-hidden="true"><span>Kontakt</span><span>Status</span><span>Nächster Schritt</span><span>Fällig</span><span>Aktion</span></div>
+<div id="contacts"></div>
+</section>
+<details class="guide"><summary>Wie arbeite ich damit?</summary><ol><li>Nach einem persönlichen Gespräch den Kontakt mit Kürzel erfassen.</li><li>Nächsten Schritt und Datum vereinbaren: z. B. „Erstgespräch anbieten“ oder „Angebotsfragen klären“.</li><li>Unter „Fällig“ die vereinbarten Rückmeldungen abarbeiten. „Schritt erledigt“ hält den Verlauf fest und fragt nach der Fortsetzung.</li><li>Status aktualisieren. Zusagen und Absagen bleiben nachvollziehbar; abgeschlossene Kontakte kannst du archivieren.</li></ol><p>Speichere nur Kürzel und geschäftliche Notizen, keine Gesundheitsdaten. Die Einträge liegen ausschließlich in diesem Browser. Sichere sie regelmäßig; ein anderer Browser oder eine andere Adresse hat einen eigenen Speicher.</p></details>
+<p id="save-status" class="save-status" role="status" aria-live="polite"></p>
+</main>
+<dialog id="contact-dialog" aria-labelledby="contact-title">
+<form id="contact-form"><div class="dialog-heading"><div><p class="eyebrow" id="contact-mode">NEUER KONTAKT</p><h2 id="contact-title">Kontakt erfassen</h2></div><button type="button" class="icon-button" data-close="contact-dialog" aria-label="Dialog schließen">×</button></div>
+<div class="dialog-body"><p id="complete-note" class="info" hidden>Der bisherige nächste Schritt wird als erledigt im Verlauf festgehalten. Lege die Fortsetzung fest oder ändere den Status.</p>
+<div class="form-grid"><label>Kürzel oder Firmenkürzel<input id="contact-alias" name="alias" type="text" maxlength="50" required autocomplete="off" placeholder="z. B. K-01 oder Firma-A"></label><label>Woher kommt der Kontakt?<select id="contact-source" name="source"><option value="persoenlich">Persönlicher Kontakt</option><option value="empfehlung">Empfehlung</option><option value="studio">Fitnessstudio</option><option value="firma">Firmenkontakt</option><option value="online">Online-Anfrage</option><option value="sonstiges">Sonstiges</option></select></label>
+<label>Status<select id="contact-stage" name="stage"><option value="kontakt">Kontakt</option><option value="gespraech">Erstgespräch</option><option value="angebot">Angebot</option><option value="gewonnen">Zusage</option><option value="pausiert">Pausiert</option><option value="abgesagt">Abgesagt</option></select></label><label>Kontaktweg<select id="contact-channel" name="channel"><option value="persoenlich">Persönlich</option><option value="email">E-Mail</option><option value="telefon">Telefon</option><option value="whatsapp">WhatsApp</option></select></label>
+<label class="full">Was möchte die Person erreichen?<input id="contact-goal" name="goal" type="text" maxlength="160" placeholder="z. B. mit einem klaren Trainingsplan starten"></label>
+<label class="full">Nächster Schritt<input id="contact-next" name="next" type="text" maxlength="160" required placeholder="Was machst du konkret als Nächstes?"></label><label>Fällig am<input id="contact-due" name="due" type="date" required></label><label>Geschäftliche Notiz<input id="contact-note" name="note" type="text" maxlength="240" placeholder="Keine privaten oder medizinischen Details"></label></div>
+<p id="next-hint" class="hint">Für offene Kontakte sind nächster Schritt und Datum erforderlich.</p>
+<details id="history-details" class="history-box" hidden><summary>Kontaktverlauf</summary><ol id="contact-history"></ol></details>
+<p id="form-error" class="form-error" role="alert"></p></div>
+<div class="dialog-actions"><button type="button" id="archive-contact" class="quiet" hidden>Archivieren</button><span class="spacer"></span><button type="button" class="secondary" data-close="contact-dialog">Abbrechen</button><button id="save-contact" type="submit" class="primary">Kontakt speichern</button></div></form>
+</dialog>
+<dialog id="backup-dialog" aria-labelledby="backup-title"><div class="dialog-heading"><div><p class="eyebrow">DEINE EINTRÄGE</p><h2 id="backup-title">Sichern &amp; wiederherstellen</h2></div><button type="button" class="icon-button" data-close="backup-dialog" aria-label="Sicherung schließen">×</button></div><div class="dialog-body"><p>Die Datei enthält deine Kontakte und deren Verlauf. Bewahre sie privat auf. Es wird nichts an einen Server gesendet.</p><button type="button" id="export-data" class="primary">Sicherung herunterladen</button><hr><label class="file-label">Sicherung auswählen<input id="import-file" type="file" accept="application/json,.json"></label><p class="hint">Gültige Einträge werden ergänzt. Neuere Versionen derselben Kontakt-ID werden übernommen. Vorhandene Kontakte werden nicht gelöscht.</p><p id="import-preview" class="info" hidden></p><button type="button" id="import-data" class="secondary" disabled>Sicherung einlesen</button><p id="backup-status" role="status"></p></div></dialog>
+<noscript><p class="alert">JavaScript wird für Kontaktverwaltung und Speicherung benötigt.</p></noscript>
 </body></html>
-
