@@ -77,7 +77,7 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
           claude_args: >-
-            --max-turns 40
+            --max-turns 60
             --allowedTools "Read,Glob,Grep,Write,Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git -C repo log:*),Bash(git -C repo show:*),Bash(git -C repo diff:*),Bash(gh run view:*),Bash(gh issue view:*),Bash(gh pr view:*)"
           prompt: |
             Du bist der wöchentliche Tiefenanalyst für das Repo ${{ github.repository }} (VitalOS, Ein-Personen-Betrieb von Daniel).
@@ -87,10 +87,19 @@ jobs:
             Aufgabe: Prüfe die Lage selbst am Code und an den Docs (NEXT.md, TODO.md, ROADMAP.md, docs/), nicht nur an der Evidenz.
             Verfolge Hypothesen: Stimmen Doku und Code überein? Was ist halb fertig? Wo liegt Risiko für Nutzer oder Deploy?
 
-            Schreibe das Ergebnis NUR nach ./work/deep.md (Deutsch, sachlich-knapp, max. 450 Wörter) mit genau diesen Abschnitten:
+            Ausbaustufen: Die Apps sind organisch gewachsen, Daniel hat vieles vergessen. Inventarisiere die Funktionsbereiche
+            (Views/Tabs, Routen, CLIs, Workflows, Skripte, Feature-Flags, Datenmodelle) und ordne jeden einer Stufe zu:
+            Idee (nur Doku/TODO) · Gerüst (Code da, nicht erreichbar/verdrahtet) · halb fertig (erreichbar, Lücken) ·
+            benutzbar · verwaist (fertig, aber nicht mehr verlinkt/genutzt oder seit Monaten unberührt).
+            Nutze dafür auch die lange Historie (git log über Monate, Datei-Alter) und vergleiche Navigation/Router mit vorhandenen Views.
+            Ziel: Daniel soll wiederfinden, was es gibt, und sehen, welcher kleine Schritt etwas Halbes nutzbar macht.
+
+            Schreibe das Ergebnis NUR nach ./work/deep.md (Deutsch, sachlich-knapp, max. 750 Wörter) mit genau diesen Abschnitten:
             ## Wo das Repo steht
             ## Risiken
             ## Widersprüche Doku ↔ Code
+            ## Ausbaustufen               (Tabelle: Bereich | Stufe | Was fehlt zum nächsten Schritt | Beleg; max. 12 Zeilen, Halbes/Verwaistes zuerst)
+            ## Vergessene Schätze         (höchstens 5: fertige oder fast fertige Dinge, die kaum jemand mehr kennt — mit Fundort)
             ## Empfehlung für diese Woche   (höchstens 3 Punkte, Verb zuerst)
             ## Seit letzter Woche          (nur wenn ./state/deep.md existiert)
 
@@ -112,6 +121,12 @@ jobs:
 
       - name: Dashboard rendern
         run: python3 engine-src/engine/render.py --evidence work/evidence.json --assessment work/assessment.json --state state --out site-dash
+
+      - name: Ausbaustufen-Issues pflegen
+        if: hashFiles('work/deep.md') != ''
+        run: |
+          url=$(python3 -c "import json;print(json.load(open('work/evidence.json'))['meta'].get('pages_url') or '')")
+          python3 engine-src/engine/ausbau.py --repo "$GITHUB_REPOSITORY" --deep work/deep.md --pages-url "$url"
 
       - name: Lage-Issue pflegen
         run: |

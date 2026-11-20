@@ -81,7 +81,7 @@ def inl(s) -> str:
 
 
 def md(text: str) -> str:
-    """Minimal-Markdown → HTML (Überschriften, Listen, Absätze, fett, code, Links)."""
+    """Minimal-Markdown → HTML (Überschriften, Listen, Tabellen, Absätze, fett, code, Links)."""
     def inline(s: str) -> str:
         s = e(s)
         s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
@@ -98,8 +98,25 @@ def md(text: str) -> str:
         if lst:
             out.append(f"</{lst}>")
             lst = None
+    table: list[list[str]] = []
+
+    def flush_table():
+        nonlocal table
+        if table:
+            head, *rows = table
+            th = "".join(f"<th>{inline(c)}</th>" for c in head)
+            tr = "".join("<tr>" + "".join(f"<td>{inline(c)}</td>" for c in r) + "</tr>" for r in rows)
+            out.append(f'<div class="table-wrap"><table><thead><tr>{th}</tr></thead><tbody>{tr}</tbody></table></div>')
+            table = []
     for raw in text.splitlines():
         line = raw.rstrip()
+        if line.lstrip().startswith("|"):
+            flush()
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if not all(re.fullmatch(r":?-{2,}:?", c) for c in cells if c):
+                table.append(cells)
+            continue
+        flush_table()
         m = re.match(r"^(#{1,4})\s+(.*)", line)
         if m:
             flush()
@@ -127,6 +144,7 @@ def md(text: str) -> str:
             lst = None
         para.append(line.strip())
     flush()
+    flush_table()
     return "\n".join(out)
 
 
