@@ -1,16 +1,16 @@
 /* Bump VERSION with any shell, script, style or manifest change. */
-const VERSION='pwa-v1';
+const VERSION='pwa-v2';
 const PREFIX='vitalos-coo-shell-';
 const CACHE=PREFIX+VERSION;
 const ROOT=new URL('./',self.location.href);
 const SHELL=new URL('./index.html',ROOT).href;
 const OFFLINE=new URL('./offline.html',ROOT).href;
-const ASSETS=['app.css','app.js','pwa.js','favicon.svg','manifest.webmanifest','offline.html','icons/icon-180.png','icons/icon-192.png','icons/icon-512.png','icons/maskable-192.png','icons/maskable-512.png'].map(path=>new URL(path,ROOT).href);
+const ASSETS=['app.css','app.js','sync-entry.js','sync-core.mjs','sync-engine.mjs','firebase-sdk.js','firebase-config.json','pwa.js','favicon.svg','manifest.webmanifest','offline.html','icons/icon-180.png','icons/icon-192.png','icons/icon-512.png','icons/maskable-192.png','icons/maskable-512.png'].map(path=>new URL(path,ROOT).href);
 const MARKER='<meta name="vitalos-coo-app" content="1">';
 const BUILD='<meta name="coo-build" content="'+VERSION+'">';
 async function signedShell(response){return response.ok&&response.headers.get('content-type')?.includes('text/html')&&(await response.clone().text()).includes(MARKER);}
 async function sameBuild(response){return (await response.clone().text()).includes(BUILD);}
-function validAsset(url,response){if(!response.ok||response.redirected)return false;const type=response.headers.get('content-type')||'';if(url.endsWith('.js'))return /javascript/.test(type);if(url.endsWith('.css'))return /text\/css/.test(type);if(url.endsWith('.png'))return /image\/png/.test(type);if(url.endsWith('.svg'))return /image\/svg/.test(type);if(url.endsWith('.webmanifest'))return /json|manifest/.test(type);return url===OFFLINE&&/text\/html/.test(type);}
+function validAsset(url,response){if(!response.ok||response.redirected)return false;const type=response.headers.get('content-type')||'';if(url.endsWith('.json'))return /application\/json/.test(type);if(/\.m?js$/.test(url))return /javascript/.test(type);if(url.endsWith('.css'))return /text\/css/.test(type);if(url.endsWith('.png'))return /image\/png/.test(type);if(url.endsWith('.svg'))return /image\/svg/.test(type);if(url.endsWith('.webmanifest'))return /json|manifest/.test(type);return url===OFFLINE&&/text\/html/.test(type);}
 self.addEventListener('install',event=>event.waitUntil((async()=>{
  const cache=await caches.open(CACHE);
  try{

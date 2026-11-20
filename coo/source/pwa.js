@@ -6,7 +6,7 @@ const isApple=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platf
 function button(label,action){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=label;b.addEventListener('click',action);return b;}
 function repaint(){
  widget.replaceChildren();const parts=[];
- if(!navigator.onLine)parts.push('Offline · lokale Vorgänge verfügbar. Quellenstände benötigen Internet.');
+ if(!navigator.onLine)parts.push('Offline · Änderungen werden auf diesem Gerät gespeichert. Der Cloud-Abgleich braucht eine Internetverbindung.');
  else if(offlineReady)parts.push('App auf diesem Gerät offline bereit.');
  if(registration?.waiting){parts.push('Eine neue Version ist bereit.');widget.append(document.createTextNode(parts.join(' ')));widget.append(button('Aktualisieren',async()=>{
   const editor=document.querySelector('#editor[open]');
