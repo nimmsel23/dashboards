@@ -124,7 +124,8 @@ def main() -> int:
     for issue in json.loads(raw or "[]"):
         mm = re.search(r"<!-- ausbau:(\S+) -->", issue.get("body") or "")
         if mm:
-            known.setdefault(mm.group(1), issue)
+            if mm.group(1) not in known or issue.get("state") == "OPEN":
+                known[mm.group(1)] = issue  # offenes Issue gewinnt gegen geschlossene Dublette
             am = re.search(r"<!-- area:(.*?) -->", issue.get("body") or "")
             issue["area"] = am.group(1) if am else mm.group(1).replace("-", " ")
 
@@ -136,8 +137,10 @@ def main() -> int:
         key = slug(row["area"])
         text = body(row, a.pages_url)
         title = f"Ausbaustufe: {row['area']} ({row['stage']})"
-        issue = known.get(key) or next(
-            (i for i in known.values() if same_area(row["area"], i.get("area", ""))), None)
+        matches = [i for i in known.values() if same_area(row["area"], i.get("area", ""))]
+        if key in known:
+            matches.insert(0, known[key])
+        issue = next((i for i in matches if i.get("state") == "OPEN"), matches[0] if matches else None)
         if a.dry_run:
             print(f"DRY {title}")
             continue
