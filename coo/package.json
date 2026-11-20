@@ -1,0 +1,15 @@
+{
+  "name": "vitalos-coo-dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:firebase": "node scripts/build-firebase.mjs",
+    "test": "node --test tests/*.cjs tests/*.mjs"
+  },
+  "dependencies": {
+    "firebase": "13.4.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}
