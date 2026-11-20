@@ -41,6 +41,21 @@ def slug(text: str) -> str:
     return re.sub(r"[^a-z0-9äöüß]+", "-", text.lower()).strip("-")[:60]
 
 
+STOP = {"und", "der", "die", "das", "mit", "von", "für", "dateien", "datei", "the", "and"}
+
+
+def words(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9äöüß]+", text.lower()) if len(w) >= 3 and w not in STOP}
+
+
+def same_area(a: str, b: str) -> bool:
+    """„Plan-Tab (`views/Plan`, 5 Dateien)“ == „Plan-Tab `views/Plan`“: Wortüberlappung statt exaktem Namen."""
+    wa, wb = words(a), words(b)
+    if not wa or not wb:
+        return False
+    return len(wa & wb) / min(len(wa), len(wb)) >= 0.6
+
+
 def clean(cell: str) -> str:
     return re.sub(r"\s+", " ", cell.replace("**", "")).strip()
 
@@ -76,6 +91,7 @@ def parse(deep: str) -> list[dict]:
 def body(row: dict, url: str) -> str:
     return "\n".join([
         f"<!-- ausbau:{slug(row['area'])} -->",
+        f"<!-- area:{row['area']} -->",
         f"**Stufe:** {row['stage']}",
         "",
         f"**Was fehlt zum nächsten Schritt:** {row['missing'] or '—'}",
@@ -103,12 +119,14 @@ def main() -> int:
         return 0
 
     raw = gh("issue", "list", "-R", a.repo, "--label", LABEL, "--state", "all", "--limit", "500",
-             "--json", "number,state,body") if not a.dry_run else "[]"
+             "--json", "number,state,body,title") if not a.dry_run else "[]"
     known: dict[str, dict] = {}
     for issue in json.loads(raw or "[]"):
         mm = re.search(r"<!-- ausbau:(\S+) -->", issue.get("body") or "")
         if mm:
             known.setdefault(mm.group(1), issue)
+            am = re.search(r"<!-- area:(.*?) -->", issue.get("body") or "")
+            issue["area"] = am.group(1) if am else mm.group(1).replace("-", " ")
 
     if not a.dry_run:
         gh("label", "create", LABEL, "-R", a.repo, "--color", "C5DEF5",
@@ -118,7 +136,8 @@ def main() -> int:
         key = slug(row["area"])
         text = body(row, a.pages_url)
         title = f"Ausbaustufe: {row['area']} ({row['stage']})"
-        issue = known.get(key)
+        issue = known.get(key) or next(
+            (i for i in known.values() if same_area(row["area"], i.get("area", ""))), None)
         if a.dry_run:
             print(f"DRY {title}")
             continue
