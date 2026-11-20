@@ -25,7 +25,7 @@
   for(const key of ['createdAt','updatedAt'])if(typeof raw[key]!=='string'||!/^\d{4}-\d\d-\d\dT/.test(raw[key])||!Number.isFinite(Date.parse(raw[key])))throw new Error('Ungültiger Zeitstempel.');
   if(!Array.isArray(raw.history)||raw.history.length>100)throw new Error('Ungültiger Kontaktverlauf.');
   const history=raw.history.map(h=>{if(!h||!Number.isFinite(Date.parse(h.at)))throw new Error('Ungültiger Verlauf.');return {at:string(h.at,40,'Verlaufsdatum'),text:string(h.text,600,'Verlauf')};});
-  return {id,alias,source:raw.source,channel:raw.channel,stage:raw.stage,goal:string(raw.goal,160,'Ziel'),next,due,note:string(raw.note,240,'Notiz'),archived:raw.archived,createdAt:raw.createdAt,updatedAt:raw.updatedAt,history};
+  return {session:validateSession(raw.session),id,alias,source:raw.source,channel:raw.channel,stage:raw.stage,goal:string(raw.goal,160,'Ziel'),next,due,note:string(raw.note,240,'Notiz'),archived:raw.archived,createdAt:raw.createdAt,updatedAt:raw.updatedAt,history};
  }
  function validateState(raw){if(!raw||raw.schema!==1||!Array.isArray(raw.contacts)||raw.contacts.length>2000||typeof raw.revision!=='string')throw new Error('Keine gültige Vitaltrainer-Sicherung (Version 1).');const contacts=raw.contacts.map(validateContact);if(new Set(contacts.map(c=>c.id)).size!==contacts.length)throw new Error('Doppelte Kontakt-IDs in der Sicherung.');return {schema:1,revision:raw.revision.slice(0,80),contacts};}
  function readDisk(){const text=localStorage.getItem(KEY);return text===null?{schema:1,revision:'',contacts:[]}:validateState(JSON.parse(text));}
@@ -43,6 +43,7 @@
  const hasDue=c=>!c.archived&&c.stage!=='abgesagt'&&c.due&&c.due<=today();
  const rank=c=>c.archived?5:hasDue(c)?0:OPEN.has(c.stage)&&!c.next?1:OPEN.has(c.stage)?2:c.stage==='gewonnen'?3:4;
  function render(){
+  renderCare();
   const active=state.contacts.filter(c=>!c.archived);
   $('count-due').textContent=blocked?'–':active.filter(hasDue).length;
   $('count-open').textContent=blocked?'–':active.filter(c=>OPEN.has(c.stage)).length;
@@ -62,6 +63,7 @@
    const stageNode=node('span','stage '+c.stage,STAGES[c.stage]);const next=node('div','next-text',c.next||'Kein weiterer Schritt geplant');if(c.goal)next.append(node('small','',c.goal));
    const due=node('div','due'+(hasDue(c)?c.due<today()?' late':' today':''),c.due?dayText(c.due):'–');if(hasDue(c))due.append(node('small','',c.due<today()?'überfällig':'heute'));
    const actions=node('div','row-actions');const edit=node('button','secondary','Bearbeiten');edit.type='button';edit.disabled=blocked;edit.addEventListener('click',()=>openContact(c.id));actions.append(edit);
+   if(!c.archived){const draft=node('button','quiet','Nachricht vorbereiten');draft.type='button';draft.onclick=()=>openDraft(c,false);actions.append(draft);}
    if(c.archived){const restore=node('button','quiet','Wiederherstellen');restore.type='button';restore.addEventListener('click',()=>archive(c.id,false));actions.append(restore);}else if(c.next){const done=node('button','quiet','Schritt erledigt');done.type='button';done.disabled=blocked;done.addEventListener('click',()=>openContact(c.id,true));actions.append(done);}
    row.append(identity,stageNode,next,due,actions);box.append(row);
   }
@@ -86,7 +88,7 @@
   if(editing.revision!==state.revision){$('form-error').textContent='Die Daten wurden inzwischen geändert. Bitte schließe den Dialog und öffne den Kontakt erneut.';return;}
   const previous=editing.id?state.contacts.find(c=>c.id===editing.id):null;const at=new Date().toISOString();const values=Object.fromEntries(fields.map(f=>[f,$('contact-'+f).value.trim()]));
   if(state.contacts.some(c=>c.id!==editing.id&&!c.archived&&c.alias.toLocaleLowerCase('de')===values.alias.toLocaleLowerCase('de'))){$('form-error').textContent='Dieses Kürzel ist bereits vergeben. Bitte wähle ein eindeutiges Kürzel.';return;}
-  const record={...values,id:previous?.id||uid(),archived:previous?.archived||false,createdAt:previous?.createdAt||at,updatedAt:at,history:previous?.history||[]};
+  const record={session:previous?.session||null,...values,id:previous?.id||uid(),archived:previous?.archived||false,createdAt:previous?.createdAt||at,updatedAt:at,history:previous?.history||[]};
   if(editing.complete&&previous?.next){record.history=history(record,'Erledigt: '+previous.next+(previous.due?' (fällig '+dayText(previous.due)+')':''),at);}
   if(!previous)record.history=history(record,'Kontakt erfasst · '+STAGES[values.stage],at);
   else if(previous.stage!==values.stage)record.history=history(record,'Status: '+STAGES[previous.stage]+' → '+STAGES[values.stage],at);
@@ -100,6 +102,122 @@
  $('export-data').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=node('a');a.href=url;a.download='vitaltrainer-kontakte-'+today()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('backup-status').textContent='Sicherung zum Herunterladen bereitgestellt.';});
  $('import-file').addEventListener('change',async()=>{pendingImport=null;$('import-data').disabled=true;$('import-preview').hidden=true;$('backup-status').textContent='';const file=$('import-file').files[0];if(!file)return;if(file.size>2*1024*1024){$('backup-status').textContent='Die Datei ist größer als 2 MB und wurde nicht eingelesen.';return;}try{pendingImport=validateState(JSON.parse(await file.text()));$('import-preview').textContent=pendingImport.contacts.length+' geprüfte Kontakte in der Sicherung. Bestehende Kontakte bleiben erhalten.';$('import-preview').hidden=false;$('import-data').disabled=blocked;}catch{$('backup-status').textContent='Keine gültige Sicherung. Es wurden keine Daten verändert.';}});
  $('import-data').addEventListener('click',()=>{if(!pendingImport)return;try{const merged=new Map(state.contacts.map(c=>[c.id,c]));let added=0,updated=0;for(const incoming of pendingImport.contacts){const existing=merged.get(incoming.id);if(!existing){merged.set(incoming.id,incoming);added++;}else if(Date.parse(incoming.updatedAt)>Date.parse(existing.updatedAt)){merged.set(incoming.id,incoming);updated++;}}commit([...merged.values()]);$('backup-status').textContent=`Eingelesen: ${added} neue und ${updated} aktualisierte Kontakte.`;pendingImport=null;$('import-data').disabled=true;}catch(e){$('backup-status').textContent=e.message;}});
+ function validateSession(raw) {
+  if (raw == null) return null;
+  if (!['planned','follow'].includes(raw.phase) || !validDate(raw.date) ||
+      !/^([01]\d|2[0-3]):[0-5]\d$/.test(raw.time)) throw new Error('Ungültiger Termin.');
+  const topic = string(raw.topic,160,'Schwerpunkt');
+  const result = string(raw.result,160,'Ergebnis');
+  if (!topic || (raw.phase === 'follow' && (!validDate(raw.follow) || raw.follow < raw.date || !result))) throw new Error('Bitte Ergebnis und Rückmeldedatum prüfen.');
+  return {phase:raw.phase, date:raw.date, time:raw.time, topic, result, follow:raw.phase === 'follow' ? raw.follow : ''};
+ }
+ function showView() {
+  const care = location.hash === '#betreuung';
+  $('contacts-panel').hidden = care;
+  $('care-panel').hidden = !care;
+  $('care-link').setAttribute('aria-current',care ? 'page' : 'false');
+  $('leads-link').setAttribute('aria-current',care ? 'false' : 'page');
+  document.title = 'Vitaltrainer · ' + (care ? 'Termine & Betreuung' : 'Klienten gewinnen');
+ }
+ window.addEventListener('hashchange',showView);
+ showView();
+ let sessionEdit;
+ function action(label,handler) {
+  const b = node('button','secondary',label);
+  b.type = 'button';
+  b.onclick = handler;
+  return b;
+ }
+ function renderCare() {
+  const active = state.contacts.filter(c => !c.archived);
+  const work = active.filter(c => c.session);
+  const when = s => s.phase === 'follow' ? s.follow : s.date+'T'+s.time;
+  work.sort((a,b) => when(a.session).localeCompare(when(b.session)));
+  $('plan-session').disabled = blocked;
+  $('care-empty').textContent = work.length ? '' : 'Hier siehst du deine nächsten Einheiten und vereinbarten Rückmeldungen.';
+  const list = $('care-list');
+  list.replaceChildren();
+  for (const c of work) {
+   const s = c.session, follow = s.phase === 'follow';
+   const row = node('article','care-row');
+   row.append(node('h2','',c.alias),node('strong','',follow ? 'Rückmeldung · '+dayText(s.follow)+(s.follow<=today()?' · fällig':'') : dayText(s.date)+' · '+s.time+' Uhr'),node('p','',s.topic));
+   if (follow) row.append(node('p','',s.result));
+   const actions = node('div','care-actions');
+   if (follow) actions.append(action('Nachricht vorbereiten',()=>openDraft(c,true)),action('Rückmeldung erledigt',()=>finishSession(c,'Rückmeldung erledigt')));
+   else actions.append(action('Einheit dokumentieren',()=>openSession(c,'complete')),action('Termin ändern',()=>openSession(c,'edit')),action('Termin absagen',()=>openSession(c,'cancel')));
+   row.append(actions); list.append(row);
+  }
+  const log = $('care-log');
+  log.replaceChildren();
+  const entries = active.flatMap(c=>c.history.filter(h=>h.text.startsWith('Einheit abgeschlossen')).map(h=>({alias:c.alias,...h}))).sort((a,b)=>b.at.localeCompare(a.at));
+  for (const h of entries) log.append(node('li','',h.alias+' · '+h.text));
+  if (!entries.length) log.append(node('li','muted','Noch keine Einheit dokumentiert.'));
+ }
+ function writeSession(c,session,note) {
+  const at = new Date().toISOString();
+  const updated = {...c,session,updatedAt:at,history:history(c,note,at)};
+  commit(state.contacts.map(item => item.id === c.id ? updated : item));
+ }
+ function finishSession(c,note) {
+  try { writeSession(c,null,note+' · '+c.session.topic); }
+  catch (error) { $('save-status').textContent=error.message; }
+ }
+ function openSession(c,mode) {
+  const completing = mode === 'complete', cancel = mode === 'cancel';
+  const available = c ? [c] : state.contacts.filter(item => !item.archived && !item.session);
+  if (!available.length) {
+   $('care-empty').textContent = state.contacts.some(c=>!c.archived) ? 'Pro Kontakt ist eine Einheit mit anschließender Rückmeldung offen. Schließe sie zuerst ab.' : 'Erfasse zuerst ein Kürzel im Reiter „Klienten gewinnen“.';
+   return;
+  }
+  sessionEdit = {mode,revision:state.revision};
+  $('session-form').reset();
+  $('session-error').textContent='';
+  $('session-person').replaceChildren(...available.map(item=>new Option(item.alias,item.id)));
+  $('session-person').disabled=!!c;
+  $('session-title').textContent = {plan:'Termin eintragen',edit:'Termin ändern',complete:'Einheit dokumentieren',cancel:'Termin absagen'}[mode];
+  const s=c?.session;
+  $('session-date').value=s?.date||today();
+  $('session-time').value=s?.time||'';
+  $('date-field').hidden=$('time-field').hidden=completing||cancel;
+  $('session-date').disabled=$('session-time').disabled=completing||cancel;
+  $('topic-label').textContent=completing?'Was habt ihr erreicht oder vereinbart?':'Schwerpunkt der Einheit';
+  $('session-topic').value=completing?'':s?.topic||'';
+  $('session-topic').readOnly=cancel;
+  $('follow-field').hidden=!completing;
+  $('session-follow').min=s?.date||'';
+  $('session-dialog').showModal();
+ }
+ $('plan-session').onclick=()=>openSession(null,'plan');
+ $('session-form').onsubmit=e=>{
+  e.preventDefault();
+  try {
+   if (sessionEdit.revision!==state.revision) throw new Error('Kontakt inzwischen geändert. Öffne den Termin erneut.');
+   const c=state.contacts.find(item=>item.id===$('session-person').value);
+   if (!c || c.archived) throw new Error('Kontakt nicht verfügbar.');
+   const topic=$('session-topic').value.trim(), follow=$('session-follow').value;
+   if (!topic) throw new Error('Bitte Schwerpunkt oder Ergebnis eintragen.');
+   if (sessionEdit.mode==='cancel') writeSession(c,null,'Termin abgesagt · '+dayText(c.session.date)+' · '+c.session.topic);
+   else if (sessionEdit.mode==='complete') {
+    writeSession(c,follow?{...c.session,phase:'follow',follow,result:topic}:null,
+     'Einheit abgeschlossen · '+dayText(c.session.date)+' · '+c.session.topic+' · '+topic+(follow?' · Nachfragen am '+dayText(follow):''));
+   } else {
+    const session={phase:'planned',date:$('session-date').value,time:$('session-time').value,topic,result:'',follow:''};
+    writeSession(c,session,'Termin vereinbart · '+dayText(session.date)+' · '+session.time+' · '+topic);
+   }
+   $('session-dialog').close();
+  } catch(error) { $('session-error').textContent=error.message; }
+ };
+ function openDraft(c,follow) {
+  const task=follow ? 'Frage nach, wie die Umsetzung seit dem Training läuft. Schwerpunkt: '+c.session.topic+'. Vereinbarung: '+c.session.result :
+   'Knüpfe an unseren persönlichen Kontakt an. Kontaktquelle: '+SOURCES[c.source]+'. Ziel: '+(c.goal||'[Ziel ergänzen]')+'. Nächster Schritt: '+(c.next||'[Schritt ergänzen]');
+  $('draft-text').value='Formuliere für mich als Vitaltrainer eine kurze persönliche Nachricht auf Deutsch. '+task+'. Stelle eine konkrete Frage. Verwende keine Werbefloskeln und erfinde keine Details.';
+  $('copy-status').textContent='';
+  $('draft-dialog').showModal();
+ }
+ $('copy-draft').onclick=async()=>{
+  try {await navigator.clipboard.writeText($('draft-text').value);$('copy-status').textContent='Kopiert. Du kannst die Vorlage in ChatGPT einfügen.';}
+  catch { $('draft-text').select();$('copy-status').textContent='Text markiert. Wähle „Kopieren“. '; }
+ };
  window.addEventListener('storage',e=>{if(e.key!==KEY)return;try{state=readDisk();if(editing)$('conflict-error').hidden=false;render();}catch{storageFailure();}});
  window.addEventListener('focus',()=>{$('today-label').textContent=new Date().toLocaleDateString('de-AT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});render();});
  $('today-label').textContent=new Date().toLocaleDateString('de-AT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('save-status').textContent='Einträge bleiben in diesem Browser. Nutze „Sicherung“ für einen Gerätewechsel.';render();

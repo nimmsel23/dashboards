@@ -8,11 +8,12 @@
 </head>
 <body>
 <a class="skip" href="#inhalt">Zum Inhalt</a>
-<header class="app-header"><a href="../" class="back">← Dashboards</a><strong>Vitaltrainer<span>Klienten gewinnen</span></strong><button type="button" id="backup-open" class="quiet">Sicherung</button></header>
+<header class="app-header"><a href="../" class="back">← Dashboards</a><strong>Vitaltrainer</strong><button type="button" id="backup-open" class="quiet">Sicherung</button></header>
 <main id="inhalt" data-app="client-pipeline">
-<div class="page-title"><div><p class="eyebrow">DEINE KONTAKTE. DEIN NÄCHSTER SCHRITT.</p><h1>Klienten gewinnen</h1><p id="today-label" class="muted"></p></div><button id="add-contact" type="button" class="primary">+ Kontakt erfassen</button></div>
 <div id="storage-error" class="alert" role="alert" hidden></div>
 <div id="conflict-error" class="alert" role="alert" hidden>Die Daten wurden in einem anderen Tab geändert. Deine offene Eingabe bleibt stehen. Schließe den Dialog und öffne den Kontakt erneut, bevor du speicherst.</div>
+<nav class="views" aria-label="Arbeitsbereich"><a id="leads-link" href="#kontakte">Klienten gewinnen</a><a id="care-link" href="#betreuung">Termine &amp; Betreuung</a></nav>
+<div id="contacts-panel"><div class="page-title"><div><h1>Klienten gewinnen</h1><p id="today-label" class="muted"></p></div><button id="add-contact" type="button" class="primary">+ Kontakt erfassen</button></div>
 <div class="summary" aria-label="Kontaktübersicht">
 <button type="button" data-scope="due" class="summary-item"><span id="count-due">0</span><div>Jetzt fällig<small>heute und überfällig</small></div></button>
 <button type="button" data-scope="open" class="summary-item"><span id="count-open">0</span><div>Offene Kontakte<small>Kontakt bis Angebot</small></div></button>
@@ -25,6 +26,12 @@
 <div id="contacts"></div>
 </section>
 <details class="guide"><summary>Wie arbeite ich damit?</summary><ol><li>Nach einem persönlichen Gespräch den Kontakt mit Kürzel erfassen.</li><li>Nächsten Schritt und Datum vereinbaren: z. B. „Erstgespräch anbieten“ oder „Angebotsfragen klären“.</li><li>Unter „Fällig“ die vereinbarten Rückmeldungen abarbeiten. „Schritt erledigt“ hält den Verlauf fest und fragt nach der Fortsetzung.</li><li>Status aktualisieren. Zusagen und Absagen bleiben nachvollziehbar; abgeschlossene Kontakte kannst du archivieren.</li></ol><p>Speichere nur Kürzel und geschäftliche Notizen, keine Gesundheitsdaten. Die Einträge liegen ausschließlich in diesem Browser. Sichere sie regelmäßig; ein anderer Browser oder eine andere Adresse hat einen eigenen Speicher.</p></details>
+</div>
+<section id="care-panel" hidden>
+<div class="page-title"><h1>Termine &amp; Betreuung</h1><button class="primary" id="plan-session">Termin eintragen</button></div>
+<p id="care-empty" class="muted"></p><div id="care-list"></div>
+<details class="guide"><summary>Abgeschlossene Einheiten</summary><ul id="care-log"></ul></details>
+</section>
 <p id="save-status" class="save-status" role="status" aria-live="polite"></p>
 </main>
 <dialog id="contact-dialog" aria-labelledby="contact-title">
@@ -39,6 +46,16 @@
 <p id="form-error" class="form-error" role="alert"></p></div>
 <div class="dialog-actions"><button type="button" id="archive-contact" class="quiet" hidden>Archivieren</button><span class="spacer"></span><button type="button" class="secondary" data-close="contact-dialog">Abbrechen</button><button id="save-contact" type="submit" class="primary">Kontakt speichern</button></div></form>
 </dialog>
+<dialog id="session-dialog" aria-labelledby="session-title">
+<form id="session-form"><div class="dialog-heading"><h2 id="session-title">Termin eintragen</h2><button type="button" class="icon-button" data-close="session-dialog" aria-label="Schließen">×</button></div>
+<div class="dialog-body form-grid"><label class="full">Kontakt<select id="session-person" required></select></label>
+<label id="date-field">Tag<input type="date" id="session-date" required></label><label id="time-field">Uhrzeit<input type="time" id="session-time" required></label>
+<label class="full"><span id="topic-label">Schwerpunkt der Einheit</span><input id="session-topic" maxlength="160" required></label>
+<label id="follow-field" hidden>Wieder nachfragen am<input type="date" id="session-follow"></label>
+<p class="form-error full" id="session-error" role="alert"></p></div>
+<div class="dialog-actions"><button type="button" data-close="session-dialog" class="secondary">Abbrechen</button><button type="submit" class="primary">Speichern</button></div></form></dialog>
+<dialog id="draft-dialog" aria-labelledby="draft-title"><div class="dialog-heading"><h2 id="draft-title">Vorlage für ChatGPT</h2><button type="button" class="icon-button" data-close="draft-dialog" aria-label="Schließen">×</button></div>
+<div class="dialog-body"><label>Vor dem Einfügen in ChatGPT prüfen und anpassen<textarea id="draft-text" rows="5"></textarea></label><button type="button" id="copy-draft" class="primary">Vorlage kopieren</button><p id="copy-status" role="status"></p></div></dialog>
 <dialog id="backup-dialog" aria-labelledby="backup-title"><div class="dialog-heading"><div><p class="eyebrow">DEINE EINTRÄGE</p><h2 id="backup-title">Sichern &amp; wiederherstellen</h2></div><button type="button" class="icon-button" data-close="backup-dialog" aria-label="Sicherung schließen">×</button></div><div class="dialog-body"><p>Die Datei enthält deine Kontakte und deren Verlauf. Bewahre sie privat auf. Es wird nichts an einen Server gesendet.</p><button type="button" id="export-data" class="primary">Sicherung herunterladen</button><hr><label class="file-label">Sicherung auswählen<input id="import-file" type="file" accept="application/json,.json"></label><p class="hint">Gültige Einträge werden ergänzt. Neuere Versionen derselben Kontakt-ID werden übernommen. Vorhandene Kontakte werden nicht gelöscht.</p><p id="import-preview" class="info" hidden></p><button type="button" id="import-data" class="secondary" disabled>Sicherung einlesen</button><p id="backup-status" role="status"></p></div></dialog>
 <noscript><p class="alert">JavaScript wird für Kontaktverwaltung und Speicherung benötigt.</p></noscript>
 </body></html>
