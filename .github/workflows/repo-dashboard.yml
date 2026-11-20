@@ -98,7 +98,7 @@ jobs:
             ## Wo das Repo steht
             ## Risiken
             ## Widersprüche Doku ↔ Code
-            ## Ausbaustufen               (Tabelle: Bereich | Stufe | Was fehlt zum nächsten Schritt | Beleg; max. 12 Zeilen, Halbes/Verwaistes zuerst)
+            ## Ausbaustufen               (Tabelle: Bereich | Stufe | Was fehlt zum nächsten Schritt | Beleg; max. 12 Zeilen, Halbes/Verwaistes zuerst; Spalte Stufe = genau EIN Wort der Skala, Unsicherheit in „Was fehlt“)
             ## Vergessene Schätze         (höchstens 5: fertige oder fast fertige Dinge, die kaum jemand mehr kennt — mit Fundort)
             ## Empfehlung für diese Woche   (höchstens 3 Punkte, Verb zuerst)
             ## Seit letzter Woche          (nur wenn ./state/deep.md existiert)

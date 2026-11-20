@@ -18,7 +18,16 @@ from pathlib import Path
 
 LABEL = "ausbaustufe"
 MAX_NEW = 5
-STAGES = {"gerüst": "Gerüst", "geruest": "Gerüst", "halb fertig": "halb fertig", "verwaist": "verwaist"}
+def stage_of(cell: str) -> str | None:
+    """Toleranter Abgleich: „Gerüst/verwaist“, „Gerüst (defekt)“, „verwaist?“ → eine Stufe."""
+    c = cell.lower()
+    if "halb" in c:
+        return "halb fertig"
+    if "gerüst" in c or "geruest" in c:
+        return "Gerüst"
+    if "verwaist" in c:
+        return "verwaist"
+    return None
 
 
 def gh(*args: str) -> str:
@@ -50,9 +59,11 @@ def parse(deep: str) -> list[dict]:
             continue
         if cells[0].lower() in ("bereich", "funktionsbereich"):
             continue
-        stage = STAGES.get(cells[1].lower().strip())
+        stage = stage_of(cells[1])
         if not stage:
             continue
+        if "?" in cells[1]:
+            cells[2] = f"(Stufe unsicher: {cells[1]}) " + (cells[2] if len(cells) > 2 else "")
         rows.append({
             "area": cells[0],
             "stage": stage,
