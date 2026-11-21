@@ -258,6 +258,21 @@ td a:hover{color:var(--olive)}.mono{font-family:ui-monospace,Menlo,monospace;fon
 .links a{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:7px 11px;font-size:12px;background:#fcfdf9}
 .links a:hover{border-color:#cfd8bf;color:var(--olive-dark)}.links .icon{width:15px;height:15px}
 .footer{padding:20px 34px 34px;font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
+.changelog{display:none}
+@media (min-width:1440px){.body-row{display:flex;align-items:flex-start}.body-row>.content{flex:1 1 auto;min-width:0}
+.changelog{display:block;flex:0 0 330px;position:sticky;top:68px;max-height:calc(100vh - 68px);overflow-y:auto;padding:34px 30px 34px 4px}}
+@media (min-width:1800px){.changelog{flex-basis:380px}}
+.cl-head{margin-bottom:14px}.cl-head p{font-size:11.5px;color:var(--muted);margin-top:3px}.cl-head a{text-decoration:underline;text-underline-offset:2px}
+.cl-day{border-left:2px solid var(--line);padding:0 0 14px 14px;position:relative}
+.cl-day::before{content:"";position:absolute;left:-5px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--olive)}
+.cl-day h3{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 6px}
+.cl-day ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.cl-day li{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.45}
+.cl-day li a{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.cl-day li a:hover{color:var(--olive-dark);text-decoration:underline}
+.cl-tags{display:flex;gap:5px;margin-bottom:3px}
+.cl-kind,.cl-scope{font-size:9.5px;font-weight:600;letter-spacing:.4px;border-radius:4px;padding:1px 6px;background:var(--soft);color:var(--olive-dark)}
+.cl-kind.neu{background:var(--lime)}.cl-kind.fix{background:var(--amber-bg);color:var(--amber)}.cl-scope{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.cl-foot{font-size:10.5px;color:var(--muted);padding-left:16px}
 @media (max-width:1100px){.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.grid{grid-template-columns:1fr}}
 @media (max-width:860px){.sidebar{position:static;width:auto;border-right:0;border-bottom:1px solid var(--line);padding:16px}
 .shell{flex-direction:column}.main{margin:0;width:100%}.side-bottom,.nav-label{display:none}.brand{padding:0 0 12px}
@@ -267,7 +282,37 @@ td a:hover{color:var(--olive)}.mono{font-family:ui-monospace,Menlo,monospace;fon
 """
 
 
-def render(ev: dict, asm: dict, deep: str, deep_at: str | None) -> str:
+WD = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+KIND = {"neu": "Neu", "fix": "Fix", "schneller": "Schneller", "design": "Design", "änderung": "Änderung"}
+
+
+def changelog_html(cl: dict | None) -> str:
+    """Produkt-Changelog (vitalos-Commits) als Seitenspalte; nur ab Desktop-Breite sichtbar."""
+    groups = (cl or {}).get("groups") or []
+    if not groups:
+        return ""
+    repo = cl.get("repo") or "nimmsel23/vitalos"
+    days = []
+    for g in groups:
+        try:
+            d = dt.date.fromisoformat(g["day"])
+            head = f"{WD[d.weekday()]} {d.strftime('%d.%m.')}"
+        except (KeyError, ValueError):
+            head = e(g.get("day"))
+        items = "".join(
+            f'<li><div class="cl-tags"><span class="cl-kind {e(x.get("kind"))}">{e(KIND.get(x.get("kind"), x.get("kind")))}</span>'
+            + (f'<span class="cl-scope">{e(x["scope"])}</span>' if x.get("scope") else "")
+            + f'</div><a href="{e(x.get("url"))}" title="{e(x.get("message"))} · {e((x.get("sha") or "")[:7])}" target="_blank" rel="noopener">{e(x.get("message"))}</a></li>'
+            for x in g.get("entries", []))
+        days.append(f'<div class="cl-day"><h3>{e(head)}</h3><ul>{items}</ul></div>')
+    return (f'<aside class="changelog" id="changelog" aria-labelledby="cl-title"><div class="cl-head">'
+            f'<h2 id="cl-title">Changelog</h2><p>VitalOS · aus guten Commit-Messages in '
+            f'<a href="https://github.com/{e(repo)}/commits">{e(repo)}</a></p></div>{"".join(days)}'
+            f'<p class="cl-foot">{e(cl.get("count", 0))} Einträge · letzte {e(cl.get("days", 30))} Tage · '
+            f'ohne Merge-, Bot-, Chore-, Docs- und CI-Commits · Stand {e(absdate(cl.get("generated_at")))}</p></aside>')
+
+
+def render(ev: dict, asm: dict, deep: str, deep_at: str | None, changelog: dict | None = None) -> str:
     meta, br = ev["meta"], ev.get("branches", {})
     name = meta["name"]
     main = br.get("main") or "master"
@@ -396,6 +441,7 @@ def render(ev: dict, asm: dict, deep: str, deep_at: str | None) -> str:
 <div class="main">
   <header class="topbar"><div class="crumb">VitalOS <span>/</span> <strong>{e(name)}</strong></div>
   <span class="stamp"><span class="dot {e(status)}"></span>Stand {e(absdate(ev["generated_at"]))}</span></header>
+  <div class="body-row">
   <main class="content">
     <section id="overview" class="hero">
       <div><div class="eyebrow">{e(ev["repo"])}{e(version)}</div><h1>{e(name)}</h1><p class="lead">{e(desc)}</p></div>
@@ -420,6 +466,8 @@ def render(ev: dict, asm: dict, deep: str, deep_at: str | None) -> str:
       <div class="panel"><div class="panel-head"><div><h2>Docs</h2><p>docs/*.md auf {e(branch_ref)}</p></div>{icon("doc")}</div><div class="panel-body"><ul class="list">{docs_html}</ul></div></div>
     </div>
   </main>
+  {changelog_html(changelog)}
+  </div>
   <footer class="footer"><span><span class="dot {e(status)}"></span> Automatisch erzeugt aus GitHub origin · {e(absdate(ev["generated_at"]))}</span>
   <span>Engine: <a href="https://github.com/nimmsel23/dashboards/tree/engine">nimmsel23/dashboards@engine</a></span>
   <span>Rohdaten: <a href="dashboard.json">dashboard.json</a></span></footer>
@@ -436,6 +484,7 @@ def main() -> int:
     ap.add_argument("--assessment", required=True)
     ap.add_argument("--state", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--changelog", help="changelog.json aus changelog.py (optional)")
     a = ap.parse_args()
     ev = json.loads(Path(a.evidence).read_text())
     asm = json.loads(Path(a.assessment).read_text())
@@ -445,7 +494,13 @@ def main() -> int:
     deep_at = None
     if (state / "deep.meta.json").is_file():
         deep_at = json.loads((state / "deep.meta.json").read_text()).get("at")
-    (out / "index.html").write_text(render(ev, asm, deep, deep_at), encoding="utf-8")
+    changelog = None
+    if a.changelog and Path(a.changelog).is_file():
+        try:
+            changelog = json.loads(Path(a.changelog).read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            changelog = None
+    (out / "index.html").write_text(render(ev, asm, deep, deep_at, changelog), encoding="utf-8")
     ev_slim = {k: v for k, v in ev.items() if k != "docs"}
     (out / "dashboard.json").write_text(json.dumps({"evidence": ev_slim, "assessment": asm}, ensure_ascii=False, indent=1))
     print(f"rendered {out / 'index.html'}")
