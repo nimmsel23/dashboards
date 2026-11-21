@@ -129,3 +129,33 @@ test('conflict survives a local edit during a transaction and a browser restart'
   assert.equal(await restarted.engine.resolve({[c.key]:'local'},2),true);
   assert.equal(restarted.cloud().state.records[0].title,'base');
 });
+test('fresh server regression pauses uploads and preserves local data until the acknowledged revision returns',async t=>{
+  const r=record('r'), a=state(r);
+  const f=setup(t,a,snapshot(0),meta(4,a));
+  assert.equal(await f.engine.refresh(),false);
+  assert.equal(f.engine.status().ready,false);
+  assert.match(f.engine.status().error,/älter/);
+  assert.deepEqual(f.local().records,[r]);
+  f.edit(s=>s.records[0].title='Lokal gespeichert');
+  assert.equal(await f.engine.flush(),false);
+  assert.equal(f.engine.status().pending,true);
+  assert.match(f.engine.status().error,/älter/);
+  f.advance(snapshot(4,r));
+  assert.equal(await f.engine.refresh(),true);
+  assert.equal(f.engine.status().ready,true);
+  assert.equal(await f.engine.flush(),true);
+  assert.equal(f.cloud().state.records[0].title,'Lokal gespeichert');
+});
+test('delayed listener event is checked against a fresh server revision',async t=>{
+  const f=setup(t,null,snapshot(5,record('r')));
+  f.deliver(snapshot(2));
+  assert.equal(f.engine.status().ready,false);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(f.engine.status().ready,true);
+  assert.equal(f.engine.status().revision,5);
+  assert.deepEqual(f.local().records,[record('r')]);
+  f.advance(snapshot(1));
+  assert.equal(await f.engine.refresh(),false);
+  assert.equal(f.engine.status().ready,false);
+  assert.equal(f.engine.status().revision,5);
+});

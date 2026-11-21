@@ -79,6 +79,9 @@ export class SyncEngine {
     this.busy = false;
     this.conflict = null;
     this.lastRemote = null;
+    this.revisionFloor = 0;
+    this.snapshotSequence = 0;
+    this.checkingRegression = false;
     this.deferred = null;
     this.error = '';
     this.notify();
@@ -96,7 +99,7 @@ export class SyncEngine {
     };
     try {
       this.unsubscribe = adapter.subscribe(
-        remote => { if (generation === this.generation) this.receive(remote); },
+        remote => { if (generation === this.generation) this.receive(remote, 'listener'); },
         failure
       );
     } catch (error) { failure(error); }
@@ -160,15 +163,35 @@ export class SyncEngine {
     return merged.state;
   }
 
-  receive(snapshot) {
+  receive(snapshot, source = 'local') {
     try {
       const remote = this.checked(snapshot);
-      if (this.lastRemote && remote.revision < this.lastRemote.revision) return;
+      if (source !== 'local') this.snapshotSequence++;
+      if (this.busy) {
+        if (!this.deferred || remote.revision >= this.deferred.revision) this.deferred = remote;
+        return;
+      }
       this.lastRemote = remote;
-      if (this.busy) { this.deferred = remote; return; }
-      this.ready = true;
       const local = this.envelope();
-      if (remote.revision < local.meta.revision) { this.conflict = null; this.error = ''; this.notify(); return; }
+      this.revisionFloor = Math.max(this.revisionFloor, local.meta.revision);
+      if (remote.revision < this.revisionFloor) {
+        this.ready = false;
+        this.conflict = null;
+        this.error = 'Die Cloud-Version ist älter als der bestätigte Stand. Deine lokale Kopie bleibt erhalten.';
+        this.notify();
+        // A listener can deliver a delayed observation. A fresh server read
+        // distinguishes that case from an actual rollback or deletion.
+        if (source === 'listener' && !this.checkingRegression) {
+          this.checkingRegression = true;
+          const generation = this.generation;
+          this.refresh().finally(() => {
+            if (generation === this.generation) this.checkingRegression = false;
+          });
+        }
+        return;
+      }
+      this.revisionFloor = remote.revision;
+      this.ready = true;
       const choices = this.conflict?.raw === local.raw && this.conflict.remote.revision === remote.revision
         ? this.conflict.choices : {};
       const merged = this.reconcile(local, remote, choices);
@@ -192,10 +215,12 @@ export class SyncEngine {
   async refresh() {
     const adapter = this.adapter, generation = this.generation;
     if (!adapter || !this.online()) { this.notify(); return false; }
+    const sequence = this.snapshotSequence;
     try {
       const remote = await adapter.read();
       if (generation !== this.generation) return false;
-      this.receive(remote);
+      if (sequence !== this.snapshotSequence && remote.revision < this.revisionFloor && this.ready) return true;
+      this.receive(remote, 'read');
       return !this.error;
     } catch (error) {
       if (generation === this.generation) { this.fail(error); this.notify(); }
@@ -216,6 +241,11 @@ export class SyncEngine {
       const acknowledged = this.checked(await adapter.transact(snapshot => {
         if (this.generation !== generation) throw Error('Abgleich beendet.');
         const remote = this.checked(snapshot);
+        if (remote.revision < Math.max(start.meta.revision, this.revisionFloor)) {
+          this.lastRemote = remote;
+          this.deferred = remote;
+          throw Error('Die Cloud-Version ist älter als der bestätigte Stand.');
+        }
         if (resolution && resolution.remote.revision !== remote.revision) {
           this.deferred = remote;
           throw Error('Die Cloud-Version hat sich geändert. Bitte Auswahl prüfen.');
@@ -227,6 +257,7 @@ export class SyncEngine {
       }));
       if (generation !== this.generation) return false;
       this.lastRemote = acknowledged;
+      this.revisionFloor = Math.max(this.revisionFloor, acknowledged.revision);
       const latest = this.envelope();
       if (latest.meta.revision > acknowledged.revision) return true;
       if (latest.raw === start.raw) {
