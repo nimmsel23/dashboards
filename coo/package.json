@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build:firebase": "node scripts/build-firebase.mjs",
-    "test": "node --test tests/*.cjs tests/*.mjs"
+    "test": "cd .. && node --test coo/tests/*.cjs coo/tests/*.mjs"
   },
   "dependencies": {
     "firebase": "13.4.0"
