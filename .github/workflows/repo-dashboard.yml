@@ -38,15 +38,31 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+    outputs:
+      version: ${{ steps.state.outputs.version }}
+      generated_at: ${{ steps.state.outputs.generated_at }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
           fetch-depth: 0
           path: repo
           lfs: false
           submodules: false
+
+      # Gebaut wird inputs.branch (dev). Fehlt er (z. B. nach Promote mit Branch-Löschung),
+      # bleibt der auslösende Branch ausgecheckt statt den Lauf abbrechen zu lassen.
+      - name: Arbeits-Branch wählen
+        working-directory: repo
+        env:
+          WANT: ${{ inputs.branch }}
+        run: |
+          if git rev-parse -q --verify "origin/$WANT" >/dev/null; then
+            git checkout -q -B "$WANT" "origin/$WANT"
+            echo "Baue Branch $WANT ($(git rev-parse --short HEAD))."
+          else
+            echo "::warning::Branch $WANT fehlt im Repo, baue $(git rev-parse --abbrev-ref HEAD) ($(git rev-parse --short HEAD))."
+          fi
 
       - name: Checkout Engine
         uses: actions/checkout@v4
@@ -138,7 +154,9 @@ jobs:
           python3 engine-src/engine/issue.py --repo "$GITHUB_REPOSITORY" --assessment work/assessment.json --pages-url "$url"
 
       - name: Zustand sichern (Branch dashboard)
+        id: state
         run: |
+          echo "generated_at=$(python3 -c "import json;print(json.load(open('site-dash/dashboard.json'))['evidence']['generated_at'])")" >> "$GITHUB_OUTPUT"
           cd repo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -154,6 +172,8 @@ jobs:
           git add -A
           git commit -q -m "dashboard: $(python3 -c "import json;a=json.load(open('dashboard.json'))['assessment'];print(a['status'], '-', ((a.get('ai') or {}).get('headline') or 'ohne KI'))")" || { echo "Keine Änderung."; exit 0; }
           git push -q origin dashboard
+          # Eindeutige Build-Version fürs Pages-Deployment (siehe deploy-Job).
+          echo "version=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: docs/ bauen (Jekyll)
         id: jekyll
@@ -180,15 +200,60 @@ jobs:
         with:
           path: ./_site
 
+  # Pages verwirft still ein Deployment, dessen pages_build_version (bei deploy-pages
+  # immer GITHUB_SHA) schon einmal deployt wurde: Lauf grün, Seite alt
+  # (actions/deploy-pages#383). Tägliche Läufe ohne neuen Commit trafen das jedes Mal.
+  # Darum deployen wir selbst mit dem SHA des frischen Zustand-Commits auf Branch
+  # dashboard als Build-Version und prüfen danach, ob die Live-Seite den neuen Stand zeigt.
   deploy:
     needs: build
     runs-on: ubuntu-latest
     permissions:
       pages: write
       id-token: write
+      actions: read
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        name: Pages deployen (eindeutige Build-Version)
+        uses: actions/github-script@v7
+        env:
+          BUILD_VERSION: ${{ needs.build.outputs.version }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const version = process.env.BUILD_VERSION || context.sha;
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({ owner, repo, run_id: context.runId, per_page: 100 });
+            const art = data.artifacts.find(a => a.name === 'github-pages' && !a.expired);
+            if (!art) { core.setFailed('Artefakt github-pages fehlt.'); return; }
+            const oidc_token = await core.getIDToken();
+            core.info(`Pages-Deployment: Artefakt ${art.id}, Build-Version ${version}`);
+            const created = (await github.request('POST /repos/{owner}/{repo}/pages/deployments',
+              { owner, repo, artifact_id: art.id, pages_build_version: version, oidc_token })).data;
+            const deploymentId = created.id || (created.status_url || '').split('/').pop() || version;
+            core.setOutput('page_url', created.page_url || '');
+            for (let i = 0; i < 120; i++) {
+              await new Promise(r => setTimeout(r, 5000));
+              const st = (await github.request('GET /repos/{owner}/{repo}/pages/deployments/{deploymentId}',
+                { owner, repo, deploymentId })).data.status;
+              core.info(`Status: ${st}`);
+              if (st === 'succeed') return;
+              if (/fail|error|cancel|lost/.test(st)) { core.setFailed(`Pages-Deployment: ${st}`); return; }
+            }
+            core.setFailed('Pages-Deployment: Zeitüberschreitung.');
+
+      - name: Live-Stand prüfen
+        env:
+          URL: ${{ steps.deployment.outputs.page_url }}
+          WANT: ${{ needs.build.outputs.generated_at }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$WANT" ]; then echo "::warning::Kein Soll-Stand, Prüfung übersprungen."; exit 0; fi
+          for i in $(seq 1 30); do
+            got=$(curl -fsSL "${URL%/}/dashboard.json?v=${GITHUB_RUN_ID}-$i" | python3 -c "import json,sys;print(json.load(sys.stdin)['evidence']['generated_at'])" 2>/dev/null || true)
+            if [ "$got" = "$WANT" ]; then echo "Live zeigt den neuen Stand: $got"; exit 0; fi
+            echo "Live noch '$got', erwartet '$WANT' – warte."; sleep 10
+          done
+          echo "::error::Live-Seite ${URL} zeigt nach 5 Minuten nicht den neuen Stand ${WANT}."
+          exit 1
