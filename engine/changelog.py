@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Produkt-Changelog aus den Commits von nimmsel23/vitalos → changelog.json.
+"""Produkt-Changelog aus den Commits eines Dev-Repos → changelog.json.
+
+Liest immer das Repo, das --repo (oder GITHUB_REPOSITORY) nennt — typisch das
+Dev-Repo, dessen Living Dashboard gerade gebaut wird, nicht fest vitalos.
 
 Vorbild: der frühere App-Changelog in vitalos
 (packages/mini-app-shell/vos-release-info.mjs, releaseNotes()): nur gute
@@ -7,7 +10,7 @@ Commit-Messages, Merge/chore/ci/build/docs/test/refactor raus, Typ-Präfix weg,
 gleiche Meldung nur einmal (neueste gewinnt). Hier zusätzlich: Bot-Autoren,
 Infra-Scopes und Commits ohne Produktdatei raus, Gruppierung nach Tag.
 
-    changelog.py --out changelog.json [--repo nimmsel23/vitalos] [--days 30] [--max 40]
+    changelog.py --out changelog.json --repo nimmsel23/<dev-repo> [--days 30] [--max 40]
 
 Fehler (kein Netz, Repo weg) ergeben eine leere Liste; das Dashboard blendet
 den Abschnitt dann einfach aus.
@@ -15,6 +18,7 @@ den Abschnitt dann einfach aus.
 from __future__ import annotations
 
 import argparse
+import os
 import datetime as dt
 import json
 import re
@@ -157,11 +161,17 @@ def build(log: str, repo: str, days: int, limit: int) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
-    ap.add_argument("--repo", default="nimmsel23/vitalos")
+    ap.add_argument("--repo", default="", help="owner/name; sonst GITHUB_REPOSITORY. Kein vitalos-Default.")
     ap.add_argument("--branch", default="master")
     ap.add_argument("--days", type=int, default=30)
     ap.add_argument("--max", type=int, default=40)
     a = ap.parse_args()
+    a.repo = (a.repo or os.environ.get("GITHUB_REPOSITORY") or "").strip()
+    if not a.repo or "/" not in a.repo:
+        print("::error::changelog.py braucht --repo owner/name oder GITHUB_REPOSITORY")
+        data = {"repo": a.repo, "count": 0, "groups": [], "error": "repo missing"}
+        Path(a.out).write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+        return 1
     try:
         data = build(git_log(a.repo, a.days, a.branch), a.repo, a.days, a.max)
     except Exception as exc:  # noqa: BLE001

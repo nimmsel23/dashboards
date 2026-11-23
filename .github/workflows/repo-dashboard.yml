@@ -136,9 +136,9 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python3 engine-src/engine/assess.py --evidence work/evidence.json --state state --out work/assessment.json
 
-      - name: Changelog aus vitalos-Commits
+      - name: Changelog aus den Commits des Repos
         continue-on-error: true  # ohne Changelog rendert das Board wie bisher
-        run: python3 engine-src/engine/changelog.py --repo nimmsel23/vitalos --out work/changelog.json
+        run: python3 engine-src/engine/changelog.py --repo "$GITHUB_REPOSITORY" --out work/changelog.json
 
       - name: Dashboard rendern
         run: python3 engine-src/engine/render.py --evidence work/evidence.json --assessment work/assessment.json --state state --out site-dash --changelog work/changelog.json

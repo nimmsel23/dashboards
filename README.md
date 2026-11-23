@@ -10,6 +10,7 @@ Dieser Branch (`engine`) ist unabhängig vom Branch `gh-pages` (Master-Dashboard
 | Schritt | Wer | Was |
 | --- | --- | --- |
 | Evidenz | `engine/collect.py` | git (dev/master-Abstand, Commits, Aktivität), Actions-Läufe, Issues, PRs, Docs-Auszüge, Firebase-Sites |
+| Changelog | `engine/changelog.py` | Produkt-Commits des **aufrufenden** Dev-Repos (`GITHUB_REPOSITORY`), nicht fest vitalos |
 | Ampel | `engine/assess.py` (Regeln) | rot = CI auf dev/master rot (≤14 Tage) oder dev/master divergiert · gelb = Promotion hängt >24 h, PR >7 Tage |
 | Lagebild | Gemini (`GEMINI_API_KEY`), jeder Lauf | Headline, Lage, Auffälligkeiten, ≤3 nächste Schritte, offene Owner-Fragen — nur aus Evidenz |
 | Tiefenanalyse | Claude Code Action (`CLAUDE_CODE_OAUTH_TOKEN`), montags | agentisch: prüft Code/Docs selbst, schreibt `deep.md` mit Belegen |

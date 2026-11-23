@@ -287,11 +287,12 @@ KIND = {"neu": "Neu", "fix": "Fix", "schneller": "Schneller", "design": "Design"
 
 
 def changelog_html(cl: dict | None) -> str:
-    """Produkt-Changelog (vitalos-Commits) als Seitenspalte; nur ab Desktop-Breite sichtbar."""
+    """Produkt-Changelog (Commits des jeweiligen Dev-Repos) als Seitenspalte; nur ab Desktop-Breite sichtbar."""
     groups = (cl or {}).get("groups") or []
     if not groups:
         return ""
-    repo = cl.get("repo") or "nimmsel23/vitalos"
+    repo = cl.get("repo") or ""
+    short = repo.rsplit("/", 1)[-1] if repo else "dieses Repo"
     days = []
     for g in groups:
         try:
@@ -306,7 +307,7 @@ def changelog_html(cl: dict | None) -> str:
             for x in g.get("entries", []))
         days.append(f'<div class="cl-day"><h3>{e(head)}</h3><ul>{items}</ul></div>')
     return (f'<aside class="changelog" id="changelog" aria-labelledby="cl-title"><div class="cl-head">'
-            f'<h2 id="cl-title">Changelog</h2><p>VitalOS · aus guten Commit-Messages in '
+            f'<h2 id="cl-title">Changelog</h2><p>{e(short)} · aus guten Commit-Messages in '
             f'<a href="https://github.com/{e(repo)}/commits">{e(repo)}</a></p></div>{"".join(days)}'
             f'<p class="cl-foot">{e(cl.get("count", 0))} Einträge · letzte {e(cl.get("days", 30))} Tage · '
             f'ohne Merge-, Bot-, Chore-, Docs- und CI-Commits · Stand {e(absdate(cl.get("generated_at")))}</p></aside>')
