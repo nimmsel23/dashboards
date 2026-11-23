@@ -1,6 +1,6 @@
 # VitalOS Entwicklungsdashboard
 
-Geprüfter Stand: 16. November 2026. Quelle: `nimmsel23/vitalos@6bb6b084198b0195219a4166f1058a46d45183d8`.
+Geprüfter Stand: 23. November 2026. Quelle: `nimmsel23/vitalos@36fc655bca9bd0c07775497f0f40355d7d035aa5`.
 
 - [Statische Dashboard-Ausgabe](index.html)
 - [Gemeinsame React-Inhalte](source/src/Dashboard.tsx) und [CSS](source/src/styles.css)
