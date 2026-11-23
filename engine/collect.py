@@ -175,7 +175,9 @@ def main() -> int:
     meta = gh_json(f"repos/{a.repo}") or {}
     pages = gh_json(f"repos/{a.repo}/pages") or {}
     br = branches()
-    work_ref = "origin/dev" if br.get("has_dev") else f"origin/{br.get('main') or 'HEAD'}"
+    # Daniel 23.11.: Dev-Boards zeigen master (Default/Release-Branch), nicht dev.
+    work_branch = br.get("main") or "HEAD"
+    work_ref = f"origin/{work_branch}" if work_branch != "HEAD" else "HEAD"
     iss, prs = issues(a.repo)
     pkg = {}
     if (root / "package.json").is_file():
@@ -199,6 +201,7 @@ def main() -> int:
         },
         "package": pkg,
         "branches": br,
+        "work": {"branch": work_branch, "sha": git("rev-parse", work_ref)},
         "commits": commits(work_ref),
         "activity": activity(work_ref),
         "workflows": workflows(a.repo),

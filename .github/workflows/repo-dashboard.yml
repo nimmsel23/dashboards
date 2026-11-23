@@ -21,9 +21,9 @@ on:
         type: boolean
         default: false
       branch:
-        description: Arbeits-Branch (Inhalt von docs/ und Commits)
+        description: Arbeits-Branch (Inhalt von docs/ und Commits). Daniel 23.11. - immer master.
         type: string
-        default: dev
+        default: master
 
 jobs:
   build:
@@ -50,13 +50,14 @@ jobs:
           lfs: false
           submodules: false
 
-      # Gebaut wird inputs.branch (dev). Fehlt er (z. B. nach Promote mit Branch-Löschung),
-      # bleibt der auslösende Branch ausgecheckt statt den Lauf abbrechen zu lassen.
+      # Gebaut wird master (Daniel 23.11.: Dev-Boards zeigen master). Ein altes "branch: dev"
+      # im Aufrufer wird auf master umgelenkt. Fehlt der Branch, bleibt der auslösende ausgecheckt.
       - name: Arbeits-Branch wählen
         working-directory: repo
         env:
           WANT: ${{ inputs.branch }}
         run: |
+          [ "$WANT" = dev ] && WANT=master
           if git rev-parse -q --verify "origin/$WANT" >/dev/null; then
             git checkout -q -B "$WANT" "origin/$WANT"
             echo "Baue Branch $WANT ($(git rev-parse --short HEAD))."
@@ -97,7 +98,7 @@ jobs:
             --allowedTools "Read,Glob,Grep,Write,Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git -C repo log:*),Bash(git -C repo show:*),Bash(git -C repo diff:*),Bash(gh run view:*),Bash(gh issue view:*),Bash(gh pr view:*)"
           prompt: |
             Du bist der wöchentliche Tiefenanalyst für das Repo ${{ github.repository }} (VitalOS, Ein-Personen-Betrieb von Daniel).
-            Das Repo liegt in ./repo (Branch ${{ inputs.branch }}), die gesammelte Evidenz in ./work/evidence.json,
+            Das Repo liegt in ./repo (Branch master), die gesammelte Evidenz in ./work/evidence.json,
             die letzte Tiefenanalyse (falls vorhanden) in ./state/deep.md, die letzte Tages-Einschätzung in ./state/dashboard.json.
 
             Aufgabe: Prüfe die Lage selbst am Code und an den Docs (NEXT.md, TODO.md, ROADMAP.md, docs/), nicht nur an der Evidenz.

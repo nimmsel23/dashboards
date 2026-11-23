@@ -404,7 +404,7 @@ def render(ev: dict, asm: dict, deep: str, deep_at: str | None, changelog: dict 
     if "docs/apps.html" in docs_files:
         links.append(("ext", "Apps-Übersicht", "apps.html"))
     links_html = "".join(f'<a href="{e(u)}" target="_blank" rel="noopener">{icon(i)}{e(t)}</a>' for i, t, u in links)
-    branch_ref = "dev" if br.get("has_dev") else main
+    branch_ref = (ev.get("work") or {}).get("branch") or main
     docs_html = "".join(
         f'<li>{icon("doc")}<a href="{e(gh)}/blob/{e(branch_ref)}/{e(f)}" target="_blank" rel="noopener">{e(f.removeprefix("docs/"))}</a></li>'
         for f in docs_files if f.endswith(".md"))[:20000] or '<li><span class="empty">Kein docs/-Ordner.</span></li>'

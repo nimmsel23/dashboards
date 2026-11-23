@@ -60,7 +60,7 @@ def rules(ev: dict) -> tuple[str, list[dict]]:
                         "text": f"PR #{p['number']} seit {h/24:.0f} Tagen offen: {p['title']}", "url": p.get("url")})
     h = age_h((ev.get("commits") or [{}])[0].get("date"))
     if h is not None and h > 24 * 30:
-        sig.append({"level": "info", "key": "quiet", "text": f"Seit {h/24:.0f} Tagen kein Commit auf dev"})
+        sig.append({"level": "info", "key": "quiet", "text": f"Seit {h/24:.0f} Tagen kein Commit auf {main}"})
     status = "red" if any(s["level"] == "red" for s in sig) else "yellow" if any(
         s["level"] == "yellow" for s in sig) else "green"
     return status, sig
