@@ -433,17 +433,6 @@ Zuletzt generiert: {now_iso()}
     BOARDS_INDEX.write_text(text, encoding="utf-8")
 
 
-def newest_mtime(paths: list[Path]) -> float:
-    m = 0.0
-    for p in paths:
-        try:
-            if p.exists():
-                m = max(m, p.stat().st_mtime)
-        except OSError:
-            pass
-    return m
-
-
 def check_stale() -> int:
     """Rough staleness: board older than its area root HEAD file or missing."""
     stale = 0
