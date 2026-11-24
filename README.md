@@ -5,6 +5,9 @@ Engine für die **Living Dashboards** der VitalOS-Dev-Repos. Jedes Repo bekommt 
 
 Dieser Branch (`engine`) ist unabhängig vom Branch `gh-pages` (Master-Dashboard) dieses Repos.
 
+**Area Living Boards** (Epic vitalos#27–#33, früher `vitalos/prod/coordination/`):
+siehe [`living-areas/`](living-areas/README.md) + Workflow `living-areas.yml`.
+
 ## Wie es läuft
 
 | Schritt | Wer | Was |

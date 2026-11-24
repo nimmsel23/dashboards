@@ -1,0 +1,73 @@
+# Regeneriert Living Area Boards (#27–#33) aus Repo-Evidenz.
+# Sibling-Repos per SYNC_TOKEN nach $RUNNER_TEMP/siblings.
+# Heimat seit 2026-11-24: nimmsel23/dashboards @ engine (früher vitalos/prod/coordination).
+name: living-areas
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 5 * * 1" # Mo 05:15 UTC
+  push:
+    branches: [engine]
+    paths:
+      - "living-areas/**"
+      - ".github/workflows/living-areas.yml"
+concurrency:
+  group: living-areas
+  cancel-in-progress: true
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+          ref: engine
+
+      - name: Checkout siblings
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          GIT_LFS_SKIP_SMUDGE: "1"
+        run: |
+          set -e
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::error::Secret SYNC_TOKEN fehlt in nimmsel23/dashboards — PAT mit repo-Scope setzen (wie früher in vitalos)."
+            exit 1
+          fi
+          export BOARDS_HOME="$RUNNER_TEMP/siblings"
+          echo "BOARDS_HOME=$BOARDS_HOME" >> "$GITHUB_ENV"
+          echo "VITALOS_ROOT=$BOARDS_HOME/vitalos" >> "$GITHUB_ENV"
+          clone() { # repo zielpfad branch
+            git clone --quiet --depth 20 --branch "$3" \
+              "https://x-access-token:${GH_TOKEN}@github.com/nimmsel23/$1.git" "$BOARDS_HOME/$2" \
+              || { echo "::warning::$1 nicht klonbar — Board zeigt 'fehlt'"; return 0; }
+            git -C "$BOARDS_HOME/$2" remote set-url origin "https://github.com/nimmsel23/$1.git"
+          }
+          mkdir -p "$BOARDS_HOME/dev"
+          clone workspace              workspace      master
+          clone business-vitaltraining vitaltrainer   master
+          clone business-creator       creator        master
+          clone obsidian-business      business       master
+          clone vitalos                vitalos        master
+          clone coach-dev              dev/coach-dev  dev
+          # Org-Evidenz für vitalos-Board-Sektion 4
+          clone vos                    .vos           main || true
+
+      - name: Generate boards
+        run: |
+          python3 living-areas/gen-boards.py
+          ls living-areas/boards/*.md
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add living-areas/boards living-areas/BOARDS.md
+          if git diff --staged --quiet; then
+            echo "No board changes"
+          else
+            git commit -m "chore(living-areas): refresh area boards [skip ci]"
+            git pull --rebase --quiet origin engine
+            git push origin HEAD:engine
+          fi
