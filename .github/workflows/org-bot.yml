@@ -1,26 +1,47 @@
 name: Org-Bot (PR anlegen & mergen)
 
+# Vorlage v2 (24.11.2026): nimmsel23/vos cto/tools/org-bot.yml.
+# Gehört zusammen mit .github/scripts/org-bot-classify.sh (Vorlage
+# cto/tools/org-bot-classify.sh). Nicht von Hand pro Repo ändern: Vorlage
+# ändern, dann verteilen. Der Org-Sweep in vos meldet abweichende Kopien.
+#
 # Org-Autonomie + Merge-Klassen: org/DECISIONS/2026-11-16-merge-klassen.md
-# Einrichtung:   cto/tools/org-bot-setup.md
+# Seit 24.11.2026 (Daniel): keine Zweitfreigabe, Merge sobald Checks grün.
 # Braucht: Repo-Variable ORG_BOT_APP_ID, Secret ORG_BOT_PRIVATE_KEY.
 # Optional: Repo-Variable ORG_BOT_MODE = docs (Default) | code.
 # Ohne ORG_BOT_APP_ID tut der Workflow nichts.
 #
 # Sicherheit: pull_request_target läuft in der Version des Default-Branches.
 # Der PR-Code wird nie ausgecheckt oder ausgeführt; gelesen wird nur die
-# Dateiliste über die API.
+# Dateiliste über die API. Das Klassifikationsskript kommt aus dem Default-Branch.
+#
+# Sweep zweimal stündlich (:17, :47) und per repository_dispatch vom Org-Sweep: jeder offene Agenten-PR wird neu bewertet. So
+# bleibt kein grüner PR liegen, nur weil ein Event gefehlt hat, und PRs hinter
+# der Basis bekommen die Basis nachgezogen.
 
 on:
   push:
-    branches: ["codex/**", "claude/**", "cursor/**", "agent/**"]
+    branches: ["codex/**", "vibe/**", "claude/**", "research/**", "orch/**"]
   pull_request_target:
     types: [opened, reopened, synchronize, labeled, ready_for_review]
+  check_suite:
+    types: [completed]
+  check_run:
+    types: [completed]
+  schedule:
+    # Zwei Slots abseits der vollen Stunde: GitHub verwirft volle-Stunde-Slots
+    # in diesen Repos oft (vitalos ":20" lief seit 17.11. nur zweimal).
+    - cron: "17,47 * * * *"
+  # Der Org-Sweep in vos stößt hier an, falls ein Zeitplan-Slot ausfällt.
+  repository_dispatch:
+    types: [org-bot-sweep]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: org-bot-${{ github.event.pull_request.number || github.ref }}
+  group: org-bot-${{ github.event.pull_request.number || github.event.check_suite.head_sha || github.event.check_run.head_sha || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -28,7 +49,7 @@ jobs:
     if: github.event_name == 'push' && vars.ORG_BOT_APP_ID != ''
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v2
         id: app
         with:
           app-id: ${{ vars.ORG_BOT_APP_ID }}
@@ -53,73 +74,53 @@ jobs:
 
   classify-merge:
     if: >-
-      github.event_name == 'pull_request_target' && vars.ORG_BOT_APP_ID != '' &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      !github.event.pull_request.draft &&
-      (startsWith(github.event.pull_request.head.ref, 'codex/') ||
-       startsWith(github.event.pull_request.head.ref, 'claude/') ||
-       startsWith(github.event.pull_request.head.ref, 'cursor/') ||
-       startsWith(github.event.pull_request.head.ref, 'agent/') ||
-       startsWith(github.event.pull_request.head.ref, 'dependabot/'))
+      vars.ORG_BOT_APP_ID != '' &&
+      (
+        (github.event_name == 'pull_request_target' &&
+         github.event.pull_request.head.repo.full_name == github.repository &&
+         !github.event.pull_request.draft) ||
+        (github.event_name == 'check_suite' && github.event.check_suite.app.slug != 'github-actions' &&
+         github.event.check_suite.head_branch != github.event.repository.default_branch) ||
+        (github.event_name == 'check_run' && github.event.check_run.app.slug != 'github-actions' &&
+         github.event.check_run.check_suite.head_branch != github.event.repository.default_branch) ||
+        github.event_name == 'schedule' ||
+        github.event_name == 'repository_dispatch' ||
+        github.event_name == 'workflow_dispatch'
+      )
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v2
         id: app
         with:
           app-id: ${{ vars.ORG_BOT_APP_ID }}
           private-key: ${{ secrets.ORG_BOT_PRIVATE_KEY }}
+      - name: Klassifikation aus dem Default-Branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+          sparse-checkout: .github/scripts
       - name: Klasse bestimmen und handeln
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           REPO: ${{ github.repository }}
-          PR: ${{ github.event.pull_request.number }}
           MODE: ${{ vars.ORG_BOT_MODE || 'docs' }}
+          EVENT: ${{ github.event_name }}
+          ONE_PR: ${{ github.event.pull_request.number || '' }}
+          HEAD_SHA: ${{ github.event.check_suite.head_sha || github.event.check_run.head_sha || '' }}
         run: |
           set -euo pipefail
-          files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" -q '.[].filename')
-          labels=$(gh pr view "$PR" -R "$REPO" --json labels -q '.labels[].name')
-
-          class=A
-          [ "$MODE" = "code" ] && class=B
-          reason=""
-          # Sensible Pfade: immer Klasse B (Peer-Agent prüft), nie Owner.
-          while IFS= read -r f; do
-            [ -n "$f" ] || continue
-            case "$f" in
-              .github/workflows/*|firebase.json|.firebaserc|*/firebase.json|*/.firebaserc|\
-              *.env|*.env.*|*secret*|*Secret*|*credential*|*.pem|*.key|*keystore*|*.jks|\
-              AGENTS.md|org/OWNER-CONTRACT.md|dashboard/publish.sh|*datenschutz*|*privacy*)
-                class=B; reason="$reason $f";;
-            esac
-          done <<< "$files"
-          # Owner-Gate nur, wenn ein Agent den PR bewusst so markiert (Aktion außerhalb von nimmsel23).
-          printf '%s\n' "$labels" | grep -qx 'owner-gate' && class=C
-
-          ensure_label() { gh label create "$1" -R "$REPO" --color "$2" --description "$3" 2>/dev/null || true; }
-
-          if [ "$class" = "C" ]; then
-            echo "Label owner-gate: wartet auf CEO-Bündel, kein Merge."
-            exit 0
+          if [ -n "$ONE_PR" ]; then
+            prs="$ONE_PR"
+          elif [ -n "$HEAD_SHA" ]; then
+            prs="$(gh api "repos/${REPO}/commits/${HEAD_SHA}/pulls" -q '.[] | select(.state=="open") | .number')"
+          else
+            prs="$(gh pr list -R "$REPO" --state open --limit 100 --json number,isDraft -q '.[] | select(.isDraft==false) | .number')"
           fi
-
-          if [ "$class" = "B" ] && ! printf '%s\n' "$labels" | grep -qx 'peer-ok'; then
-            ensure_label peer-ok 0E8A16 "Klasse B: von einem anderen Agenten als dem Autor geprüft"
-            if [ -n "$reason" ] && ! printf '%s\n' "$labels" | grep -qx 'needs-peer'; then
-              ensure_label needs-peer FBCA04 "Klasse B: braucht Prüfung durch einen anderen Agenten"
-              gh pr edit "$PR" -R "$REPO" --add-label needs-peer
-            fi
-            echo "Klasse B: wartet auf Label peer-ok.${reason}"
-            exit 0
-          fi
-
-          ensure_label "merge:$class" C2E0C6 "Vom Org-Bot gemergt (Klasse $class)"
-          gh pr edit "$PR" -R "$REPO" --add-label "merge:$class" || true
-          # Auto-Merge wartet auf Pflicht-Checks, wo Branch-Schutz sie verlangt.
-          # Code und sensible Pfade nie ohne Pflicht-Checks mergen: dort nur --auto.
-          if ! gh pr merge "$PR" -R "$REPO" --squash --auto --delete-branch; then
-            if [ "$class" = "A" ]; then
-              gh pr merge "$PR" -R "$REPO" --squash --delete-branch
-            else
-              echo "::warning::Auto-Merge nicht möglich (Branch-Schutz mit Pflicht-Checks fehlt?). Kein Direkt-Merge im Modus code."
-            fi
-          fi
+          [ -n "$prs" ] || { echo "Kein offener PR."; exit 0; }
+          while IFS= read -r pr; do
+            [ -n "$pr" ] || continue
+            echo "=== PR #${pr} ==="
+            PR="$pr" bash .github/scripts/org-bot-classify.sh || { echo "::warning::PR #${pr}: Klassifikation fehlgeschlagen."; }
+          done <<< "$prs"
+          exit 0

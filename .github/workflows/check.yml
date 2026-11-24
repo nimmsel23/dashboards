@@ -1,0 +1,52 @@
+name: Check
+
+# Vorlage: nimmsel23/vos cto/tools/check-basic.yml
+# Grundprüfung für Repos ohne eigenen Build (Docs, Büro, Org). Damit hat jeder
+# PR mindestens einen echten Check und der Org-Bot kann nach Klasse mergen.
+# Prüft nur Technik: Syntax von Shell, Python, JSON und YAML, dazu Tests unter
+# tests/ (pytest oder unittest), falls vorhanden. Liest keine Inhalte aus.
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Syntax (Shell, Python, JSON, YAML)
+        run: |
+          set -euo pipefail
+          pip install -q pyyaml
+          fail=0
+          while IFS= read -r -d '' f; do bash -n "$f" || fail=1; done \
+            < <(git ls-files -z '*.sh' 'bin/*' | xargs -0 -r grep -lZ -m1 -E '^#!.*(ba)?sh' 2>/dev/null || true)
+          git ls-files -z '*.py' | xargs -0 -r python -m py_compile || fail=1
+          git ls-files -z '*.json' | while IFS= read -r -d '' f; do
+            python -c 'import json,sys; json.load(open(sys.argv[1]))' "$f" || { echo "JSON kaputt: $f"; exit 1; }
+          done || fail=1
+          git ls-files -z '*.yml' '*.yaml' | while IFS= read -r -d '' f; do
+            python -c 'import yaml,sys; list(yaml.safe_load_all(open(sys.argv[1])))' "$f" || { echo "YAML kaputt: $f"; exit 1; }
+          done || fail=1
+          exit "$fail"
+      - name: Tests
+        run: |
+          set -euo pipefail
+          [ -d tests ] || { echo "Keine Tests."; exit 0; }
+          if [ -f requirements.txt ]; then pip install -q -r requirements.txt; fi
+          if ls tests/test_*.py >/dev/null 2>&1; then
+            pip install -q pytest
+            python -m pytest -q tests
+          fi
