@@ -1,0 +1,75 @@
+name: CI-Heilung (rote Läufe wiederholen)
+
+# Vorlage: nimmsel23/vos cto/tools/ci-heal.yml · Doku: cto/wissen/merge-und-pin-automatik.md
+# Zweimal stündlich und auf Anstoß des Org-Sweeps: Ist der jeweils letzte Lauf eines Workflows auf dem Default-Branch
+# (oder auf dev) rot, wiederholt dieser Job die fehlgeschlagenen Jobs, höchstens
+# bis Versuch 3 und nur für Läufe der letzten 72 Stunden. Das fängt flüchtige
+# Fehler ab (Firebase 500, Netz, ein kurz fehlender Nachbar-Branch).
+# Bleibt ein Lauf nach Versuch 3 rot, meldet ihn der Org-Sweep in vos in genau
+# einem Issue an den CTO. Niemand sonst wird angeschrieben.
+# Nur GITHUB_TOKEN, keine Secrets, kein neuer Deploy: ein Rerun wiederholt
+# genau den Lauf, den die bestehende Pipeline schon gestartet hatte.
+
+on:
+  schedule:
+    # Zwei Slots abseits der vollen Stunde (volle-Stunde-Slots fallen oft aus).
+    - cron: "8,38 * * * *"
+  # Der Org-Sweep in vos stößt hier an, sobald er einen roten Lauf sieht.
+  repository_dispatch:
+    types: [ci-heal]
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: ci-heal
+  cancel-in-progress: false
+
+jobs:
+  heal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Letzte rote Läufe wiederholen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          DEFAULT: ${{ github.event.repository.default_branch }}
+          MAX_ATTEMPT: "3"
+          MAX_AGE_H: "72"
+        run: |
+          set -euo pipefail
+          branches="$DEFAULT"
+          if [ "$DEFAULT" != dev ] && gh api "repos/$REPO/branches/dev" >/dev/null 2>&1; then
+            branches="$branches dev"
+          fi
+          now=$(date +%s)
+          for b in $branches; do
+            # Neuester Lauf je aktivem Workflow auf diesem Branch (ohne PR-Läufe).
+            for wf in $(gh api "repos/$REPO/actions/workflows?per_page=100" -q '.workflows[] | select(.state=="active" and (.path | startswith("dynamic/") | not)) | .id'); do
+              gh api "repos/$REPO/actions/workflows/$wf/runs?branch=$b&per_page=5&exclude_pull_requests=true" \
+                -q '[.workflow_runs[] | select(.event != "pull_request" and .event != "pull_request_target")][0]
+                    | select(. != null) | [.id, .name, (.conclusion // ""), .status, .run_attempt, .created_at, .event] | @tsv'
+            done |
+            while IFS=$'\t' read -r id name concl status attempt created event; do
+              case "$name" in "CI-Heilung"*|"Org-Bot"*|"Gemini CI Agent"|"Merge-Agent") continue ;; esac
+              [ "$status" = completed ] || continue
+              # Zeitgesteuerte Läufe wiederholt der nächste Zeitplan von selbst.
+              [ "$event" = schedule ] && continue
+              case "$concl" in failure|timed_out|startup_failure) ;; *) continue ;; esac
+              age_h=$(( (now - $(date -d "$created" +%s)) / 3600 ))
+              if [ "$age_h" -ge "$MAX_AGE_H" ]; then
+                echo "::notice::$name@$b rot, aber ${age_h}h alt: kein Rerun (Org-Sweep meldet)."
+                continue
+              fi
+              if [ "$attempt" -ge "$MAX_ATTEMPT" ]; then
+                echo "::warning::$name@$b nach Versuch $attempt weiter rot: Org-Sweep meldet."
+                continue
+              fi
+              echo "Rerun: $name@$b (Lauf $id, Versuch $attempt)"
+              gh run rerun "$id" -R "$REPO" --failed || gh run rerun "$id" -R "$REPO" || \
+                echo "::warning::Rerun von $id nicht möglich."
+            done
+          done
