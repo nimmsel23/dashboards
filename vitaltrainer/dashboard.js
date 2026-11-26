@@ -30,9 +30,78 @@
  function validateState(raw){if(!raw||raw.schema!==1||!Array.isArray(raw.contacts)||raw.contacts.length>2000||typeof raw.revision!=='string')throw new Error('Keine gültige Vitaltrainer-Sicherung (Version 1).');const contacts=raw.contacts.map(validateContact);if(new Set(contacts.map(c=>c.id)).size!==contacts.length)throw new Error('Doppelte Kontakt-IDs in der Sicherung.');return {schema:1,revision:raw.revision.slice(0,80),contacts};}
  function readDisk(){const text=localStorage.getItem(KEY);return text===null?{schema:1,revision:'',contacts:[]}:validateState(JSON.parse(text));}
  function storageFailure(){blocked=true;$('storage-error').hidden=false;$('storage-error').textContent='Die Browserdaten können nicht sicher gelesen oder gespeichert werden. Es wird nichts überschrieben. Prüfe den Browserspeicher oder öffne eine vorhandene Sicherung auf einem anderen Gerät.';$('add-contact').disabled=true;}
- try{state=readDisk();}catch{storageFailure();}
+ const gitMode = location.origin === 'https://vos-dashboards.web.app' && !new URLSearchParams(location.search).has('altbestand');
+ let gitSha, gitUser, savingGit = false;
+ const endpoint = 'https://europe-west1-vitalos-prod.cloudfunctions.net/vitaltrainerGit';
+ const validSha = value => /^[0-9a-f]{40}$/.test(value || '');
+ async function gitRequest(method, payload) {
+  const response = await fetch(endpoint, {
+   method, cache:'no-store', credentials:'omit', redirect:'error',
+   headers:{Authorization:'Bearer '+await gitUser.getIdToken(), ...(payload ? {'Content-Type':'application/json'} : {})},
+   ...(payload ? {body:JSON.stringify(payload)} : {})
+  });
+  if (!response.ok) {
+   if (response.status===409) throw new Error('Ein anderes Gerät hat gespeichert. Kopiere deinen Entwurf und lade den aktuellen Git-Stand neu.');
+   if ([401,403].includes(response.status)) throw new Error('Dein Konto hat keinen Zugriff auf diesen Datenstand.');
+   throw new Error('Git konnte die Anfrage nicht bestätigen. Prüfe den Stand vor einem erneuten Versuch.');
+  }
+  return response.json();
+ }
+ async function saveGit(contacts) {
+  if (savingGit || !gitUser || !gitSha) throw new Error('Der Git-Speicher ist noch nicht bereit.');
+  savingGit=true;
+  try {
+   const updated=validateState({schema:1,revision:uid(),contacts});
+   const receipt=await gitRequest('PUT',{sha:gitSha,state:updated});
+   if (!validSha(receipt.sha) || !validSha(receipt.commit)) throw new Error('Commit wurde nicht bestätigt.');
+   state=updated;
+   gitSha=receipt.sha;
+   render();
+   $('save-status').textContent='In Git gespeichert · '+receipt.commit.slice(0,10);
+  } finally { savingGit=false; }
+ }
+ async function connectGit() {
+  const status=$('git-status'), button=$('git-login');
+  try {
+   const [appSdk,authSdk,config]=await Promise.all([
+    import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js'),
+    fetch('/__/firebase/init.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error();return r.json();})
+   ]);
+   if(config.projectId!=='vitalos-prod')throw Error();
+   const auth=authSdk.getAuth(appSdk.initializeApp(config));
+   button.onclick=async()=>{
+    try {await authSdk.signInWithPopup(auth,new authSdk.GoogleAuthProvider());}
+    catch {status.textContent='Anmeldung nicht abgeschlossen. Du kannst es erneut versuchen.';}
+   };
+   authSdk.onAuthStateChanged(auth,async user=>{
+    if (!user) {
+     if (gitUser) {location.reload();return;}
+     status.textContent='Melde dich an, um deinen privaten Git-Stand zu laden.';
+     button.hidden=false;
+     return;
+    }
+    if (gitUser && gitUser.uid!==user.uid) {location.reload();return;}
+    gitUser=user;
+    button.hidden=true;
+    try {
+     const remote=await gitRequest('GET');
+     if(!validSha(remote.sha))throw Error('Unvollständige Antwort aus Git.');
+     state=validateState(remote.state);gitSha=remote.sha;blocked=false;
+     $('git-workspace').hidden=false;
+     $('save-status').textContent='Privater Git-Stand geladen.';
+     status.textContent='Speicher: privates Git-Repository';
+     render();
+    } catch(error) {status.textContent=error.message+' Seite neu laden, um es erneut zu versuchen.';}
+    $('git-logout').hidden=false;
+    $('git-logout').onclick=()=>authSdk.signOut(auth);
+   });
+  } catch {status.textContent='Git-Anmeldung nicht verfügbar. Seite später neu laden.';}
+ }
+ if(!gitMode)try{state=readDisk();}catch{storageFailure();}
  function commit(contacts){
   if(blocked)throw new Error('Speichern ist in diesem Browser derzeit nicht möglich.');
+  if(gitMode)return saveGit(contacts);
   let disk;try{disk=readDisk();}catch{storageFailure();throw new Error('Browserdaten konnten nicht gelesen werden. Deine Eingabe bleibt erhalten.');}
   if(disk.revision!==state.revision){state=disk;$('conflict-error').hidden=false;render();throw new Error('Ein anderer Tab hat die Daten geändert. Schließe den Dialog und öffne den Kontakt erneut.');}
   const nextState=validateState({schema:1,revision:uid(),contacts});
@@ -83,7 +152,7 @@
  }
  $('add-contact').addEventListener('click',()=>openContact());document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>$(b.dataset.close).close()));
  $('contact-dialog').addEventListener('close',()=>{editing=null;$('conflict-error').hidden=true;});
- $('contact-form').addEventListener('submit',e=>{
+ $('contact-form').addEventListener('submit',async e=>{
   e.preventDefault();if(!editing||blocked)return;$('form-error').textContent='';
   if(editing.revision!==state.revision){$('form-error').textContent='Die Daten wurden inzwischen geändert. Bitte schließe den Dialog und öffne den Kontakt erneut.';return;}
   const previous=editing.id?state.contacts.find(c=>c.id===editing.id):null;const at=new Date().toISOString();const values=Object.fromEntries(fields.map(f=>[f,$('contact-'+f).value.trim()]));
@@ -93,15 +162,15 @@
   if(!previous)record.history=history(record,'Kontakt erfasst · '+STAGES[values.stage],at);
   else if(previous.stage!==values.stage)record.history=history(record,'Status: '+STAGES[previous.stage]+' → '+STAGES[values.stage],at);
   if(record.next&&(!previous||previous.next!==record.next||previous.due!==record.due||editing.complete))record.history=history(record,'Geplant: '+record.next+(record.due?' · '+dayText(record.due):''),at);
-  try{const valid=validateContact(record);commit(previous?state.contacts.map(c=>c.id===valid.id?valid:c):[...state.contacts,valid]);$('contact-dialog').close();}
+  try{const valid=validateContact(record);const result=commit(previous?state.contacts.map(c=>c.id===valid.id?valid:c):[...state.contacts,valid]);if(result)await result;$('contact-dialog').close();}
   catch(error){$('form-error').textContent=error.message;}
  });
- function archive(id,archived){const current=state.contacts.find(c=>c.id===id);if(!current)return;const at=new Date().toISOString();const value={...current,archived,updatedAt:at,history:history(current,archived?'Archiviert':'Wiederhergestellt',at)};try{commit(state.contacts.map(c=>c.id===id?value:c));if($('contact-dialog').open)$('contact-dialog').close();}catch(e){if($('contact-dialog').open)$('form-error').textContent=e.message;else{$('storage-error').textContent=e.message;$('storage-error').hidden=false;}}}
+ async function archive(id,archived){const current=state.contacts.find(c=>c.id===id);if(!current)return;const at=new Date().toISOString();const value={...current,archived,updatedAt:at,history:history(current,archived?'Archiviert':'Wiederhergestellt',at)};try{const result=commit(state.contacts.map(c=>c.id===id?value:c));if(result)await result;if($('contact-dialog').open)$('contact-dialog').close();}catch(e){if($('contact-dialog').open)$('form-error').textContent=e.message;else{$('storage-error').textContent=e.message;$('storage-error').hidden=false;}}}
  $('archive-contact').addEventListener('click',()=>{if(!editing)return;if(editing.revision!==state.revision){$('form-error').textContent='Daten wurden geändert. Kontakt bitte erneut öffnen.';return;}const c=state.contacts.find(c=>c.id===editing.id);if(c)archive(c.id,!c.archived);});
  $('backup-open').addEventListener('click',()=>{$('backup-status').textContent='';$('backup-dialog').showModal();});
  $('export-data').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=node('a');a.href=url;a.download='vitaltrainer-kontakte-'+today()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('backup-status').textContent='Sicherung zum Herunterladen bereitgestellt.';});
  $('import-file').addEventListener('change',async()=>{pendingImport=null;$('import-data').disabled=true;$('import-preview').hidden=true;$('backup-status').textContent='';const file=$('import-file').files[0];if(!file)return;if(file.size>2*1024*1024){$('backup-status').textContent='Die Datei ist größer als 2 MB und wurde nicht eingelesen.';return;}try{pendingImport=validateState(JSON.parse(await file.text()));$('import-preview').textContent=pendingImport.contacts.length+' geprüfte Kontakte in der Sicherung. Bestehende Kontakte bleiben erhalten.';$('import-preview').hidden=false;$('import-data').disabled=blocked;}catch{$('backup-status').textContent='Keine gültige Sicherung. Es wurden keine Daten verändert.';}});
- $('import-data').addEventListener('click',()=>{if(!pendingImport)return;try{const merged=new Map(state.contacts.map(c=>[c.id,c]));let added=0,updated=0;for(const incoming of pendingImport.contacts){const existing=merged.get(incoming.id);if(!existing){merged.set(incoming.id,incoming);added++;}else if(Date.parse(incoming.updatedAt)>Date.parse(existing.updatedAt)){merged.set(incoming.id,incoming);updated++;}}commit([...merged.values()]);$('backup-status').textContent=`Eingelesen: ${added} neue und ${updated} aktualisierte Kontakte.`;pendingImport=null;$('import-data').disabled=true;}catch(e){$('backup-status').textContent=e.message;}});
+ $('import-data').addEventListener('click',async()=>{if(!pendingImport)return;try{const merged=new Map(state.contacts.map(c=>[c.id,c]));let added=0,updated=0;for(const incoming of pendingImport.contacts){const existing=merged.get(incoming.id);if(!existing){merged.set(incoming.id,incoming);added++;}else if(Date.parse(incoming.updatedAt)>Date.parse(existing.updatedAt)){merged.set(incoming.id,incoming);updated++;}}const result=commit([...merged.values()]);if(result)await result;$('backup-status').textContent=`Eingelesen: ${added} neue und ${updated} aktualisierte Kontakte.`;pendingImport=null;$('import-data').disabled=true;}catch(e){$('backup-status').textContent=e.message;}});
  function validateSession(raw) {
   if (raw == null) return null;
   if (!['planned','follow'].includes(raw.phase) || !validDate(raw.date) ||
@@ -156,10 +225,10 @@
  function writeSession(c,session,note) {
   const at = new Date().toISOString();
   const updated = {...c,session,updatedAt:at,history:history(c,note,at)};
-  commit(state.contacts.map(item => item.id === c.id ? updated : item));
+  return commit(state.contacts.map(item => item.id === c.id ? updated : item));
  }
- function finishSession(c,note) {
-  try { writeSession(c,null,note+' · '+c.session.topic); }
+ async function finishSession(c,note) {
+  try { await writeSession(c,null,note+' · '+c.session.topic); }
   catch (error) { $('save-status').textContent=error.message; }
  }
  function openSession(c,mode) {
@@ -188,7 +257,7 @@
   $('session-dialog').showModal();
  }
  $('plan-session').onclick=()=>openSession(null,'plan');
- $('session-form').onsubmit=e=>{
+ $('session-form').onsubmit=async e=>{
   e.preventDefault();
   try {
    if (sessionEdit.revision!==state.revision) throw new Error('Kontakt inzwischen geändert. Öffne den Termin erneut.');
@@ -196,14 +265,16 @@
    if (!c || c.archived) throw new Error('Kontakt nicht verfügbar.');
    const topic=$('session-topic').value.trim(), follow=$('session-follow').value;
    if (!topic) throw new Error('Bitte Schwerpunkt oder Ergebnis eintragen.');
-   if (sessionEdit.mode==='cancel') writeSession(c,null,'Termin abgesagt · '+dayText(c.session.date)+' · '+c.session.topic);
+   let result;
+   if (sessionEdit.mode==='cancel') result=writeSession(c,null,'Termin abgesagt · '+dayText(c.session.date)+' · '+c.session.topic);
    else if (sessionEdit.mode==='complete') {
-    writeSession(c,follow?{...c.session,phase:'follow',follow,result:topic}:null,
+    result=writeSession(c,follow?{...c.session,phase:'follow',follow,result:topic}:null,
      'Einheit abgeschlossen · '+dayText(c.session.date)+' · '+c.session.topic+' · '+topic+(follow?' · Nachfragen am '+dayText(follow):''));
    } else {
     const session={phase:'planned',date:$('session-date').value,time:$('session-time').value,topic,result:'',follow:''};
-    writeSession(c,session,'Termin vereinbart · '+dayText(session.date)+' · '+session.time+' · '+topic);
+    result=writeSession(c,session,'Termin vereinbart · '+dayText(session.date)+' · '+session.time+' · '+topic);
    }
+   if(result)await result;
    $('session-dialog').close();
   } catch(error) { $('session-error').textContent=error.message; }
  };
@@ -218,7 +289,18 @@
   try {await navigator.clipboard.writeText($('draft-text').value);$('copy-status').textContent='Kopiert. Du kannst die Vorlage in ChatGPT einfügen.';}
   catch { $('draft-text').select();$('copy-status').textContent='Text markiert. Wähle „Kopieren“. '; }
  };
- window.addEventListener('storage',e=>{if(e.key!==KEY)return;try{state=readDisk();if(editing)$('conflict-error').hidden=false;render();}catch{storageFailure();}});
+ window.addEventListener('storage',e=>{if(gitMode||e.key!==KEY)return;try{state=readDisk();if(editing)$('conflict-error').hidden=false;render();}catch{storageFailure();}});
  window.addEventListener('focus',()=>{$('today-label').textContent=new Date().toLocaleDateString('de-AT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});render();});
  $('today-label').textContent=new Date().toLocaleDateString('de-AT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});$('save-status').textContent='Einträge bleiben in diesem Browser. Nutze „Sicherung“ für einen Gerätewechsel.';render();
+ if(gitMode){
+  blocked=true;
+  $('git-workspace').hidden=true;
+  $('git-connection').hidden=false;
+  document.querySelector('.guide').hidden=true;
+  $('backup-open').hidden=true;
+  $('git-backup').hidden=false;
+  $('git-backup').onclick=()=>$('backup-dialog').showModal();
+  $('storage-info').textContent='Die Sicherung enthält den geladenen Git-Stand. Ein Import wird beim Bestätigen in das private Repository geschrieben.';
+  connectGit();
+ }
 })();

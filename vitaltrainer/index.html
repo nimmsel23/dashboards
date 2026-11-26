@@ -4,12 +4,13 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#182d31"><title>Vitaltrainer · Klienten gewinnen</title>
 <link rel="canonical" href="https://nimmsel23.github.io/dashboards/vitaltrainer/">
-<link rel="stylesheet" href="dashboard.css?v=2"><script src="dashboard.js?v=2" defer></script>
+<link rel="stylesheet" href="dashboard.css?v=2"><script src="dashboard.js?v=3" defer></script>
 </head>
 <body>
 <a class="skip" href="#inhalt">Zum Inhalt</a>
 <header class="app-header"><a href="../" class="back">← Dashboards</a><strong>Vitaltrainer</strong><button type="button" id="backup-open" class="quiet">Sicherung</button></header>
-<main id="inhalt" data-app="client-pipeline">
+<section id="git-connection" aria-label="Git-Verbindung" hidden><p role="status" id="git-status">Git-Anmeldung wird geladen …</p><button type="button" class="primary" id="git-login" hidden>Mit Google anmelden</button><button type="button" class="quiet" id="git-logout" hidden>Abmelden</button></section>
+<div id="git-workspace"><main id="inhalt" data-app="client-pipeline">
 <div id="storage-error" class="alert" role="alert" hidden></div>
 <div id="conflict-error" class="alert" role="alert" hidden>Die Daten wurden in einem anderen Tab geändert. Deine offene Eingabe bleibt stehen. Schließe den Dialog und öffne den Kontakt erneut, bevor du speicherst.</div>
 <nav class="views" aria-label="Arbeitsbereich"><a id="leads-link" href="#kontakte">Klienten gewinnen</a><a id="care-link" href="#betreuung">Termine &amp; Betreuung</a></nav>
@@ -33,7 +34,7 @@
 <details class="guide"><summary>Abgeschlossene Einheiten</summary><ul id="care-log"></ul></details>
 </section>
 <p id="save-status" class="save-status" role="status" aria-live="polite"></p>
-</main>
+<button hidden id="git-backup" class="quiet">Sicherung / Import</button></main></div>
 <dialog id="contact-dialog" aria-labelledby="contact-title">
 <form id="contact-form"><div class="dialog-heading"><div><p class="eyebrow" id="contact-mode">NEUER KONTAKT</p><h2 id="contact-title">Kontakt erfassen</h2></div><button type="button" class="icon-button" data-close="contact-dialog" aria-label="Dialog schließen">×</button></div>
 <div class="dialog-body"><p id="complete-note" class="info" hidden>Der bisherige nächste Schritt wird als erledigt im Verlauf festgehalten. Lege die Fortsetzung fest oder ändere den Status.</p>
@@ -56,6 +57,6 @@
 <div class="dialog-actions"><button type="button" data-close="session-dialog" class="secondary">Abbrechen</button><button type="submit" class="primary">Speichern</button></div></form></dialog>
 <dialog id="draft-dialog" aria-labelledby="draft-title"><div class="dialog-heading"><h2 id="draft-title">Vorlage für ChatGPT</h2><button type="button" class="icon-button" data-close="draft-dialog" aria-label="Schließen">×</button></div>
 <div class="dialog-body"><label>Vor dem Einfügen in ChatGPT prüfen und anpassen<textarea id="draft-text" rows="5"></textarea></label><button type="button" id="copy-draft" class="primary">Vorlage kopieren</button><p id="copy-status" role="status"></p></div></dialog>
-<dialog id="backup-dialog" aria-labelledby="backup-title"><div class="dialog-heading"><div><p class="eyebrow">DEINE EINTRÄGE</p><h2 id="backup-title">Sichern &amp; wiederherstellen</h2></div><button type="button" class="icon-button" data-close="backup-dialog" aria-label="Sicherung schließen">×</button></div><div class="dialog-body"><p>Die Datei enthält deine Kontakte und deren Verlauf. Bewahre sie privat auf. Es wird nichts an einen Server gesendet.</p><button type="button" id="export-data" class="primary">Sicherung herunterladen</button><hr><label class="file-label">Sicherung auswählen<input id="import-file" type="file" accept="application/json,.json"></label><p class="hint">Gültige Einträge werden ergänzt. Neuere Versionen derselben Kontakt-ID werden übernommen. Vorhandene Kontakte werden nicht gelöscht.</p><p id="import-preview" class="info" hidden></p><button type="button" id="import-data" class="secondary" disabled>Sicherung einlesen</button><p id="backup-status" role="status"></p></div></dialog>
+<dialog id="backup-dialog" aria-labelledby="backup-title"><div class="dialog-heading"><div><p class="eyebrow">DEINE EINTRÄGE</p><h2 id="backup-title">Sichern &amp; wiederherstellen</h2></div><button type="button" class="icon-button" data-close="backup-dialog" aria-label="Sicherung schließen">×</button></div><div class="dialog-body"><p id="storage-info">Die Datei enthält deine Kontakte und deren Verlauf. Bewahre sie privat auf. Es wird nichts an einen Server gesendet.</p><button type="button" id="export-data" class="primary">Sicherung herunterladen</button><hr><label class="file-label">Sicherung auswählen<input id="import-file" type="file" accept="application/json,.json"></label><p class="hint">Gültige Einträge werden ergänzt. Neuere Versionen derselben Kontakt-ID werden übernommen. Vorhandene Kontakte werden nicht gelöscht.</p><p id="import-preview" class="info" hidden></p><button type="button" id="import-data" class="secondary" disabled>Sicherung einlesen</button><p id="backup-status" role="status"></p></div></dialog>
 <noscript><p class="alert">JavaScript wird für Kontaktverwaltung und Speicherung benötigt.</p></noscript>
 </body></html>
