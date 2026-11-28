@@ -1,0 +1,74 @@
+[
+  {
+    "path": "6pack-app",
+    "repo": "nimmsel23/6pack-dev",
+    "pin": "e3bc44fa86a694c937484fdf2e1fe1e7b7dc7ef2",
+    "upstream": "e3bc44fa86a694c937484fdf2e1fe1e7b7dc7ef2",
+    "dev": "e3bc44fa86a694c937484fdf2e1fe1e7b7dc7ef2",
+    "ahead": 0
+  },
+  {
+    "path": "fitness-app",
+    "repo": "nimmsel23/fitness-dev",
+    "pin": "c45f846482a9e15ef17492bafc5a8be12353aff4",
+    "upstream": "c45f846482a9e15ef17492bafc5a8be12353aff4",
+    "dev": "c45f846482a9e15ef17492bafc5a8be12353aff4",
+    "ahead": 0
+  },
+  {
+    "path": "fuel-app",
+    "repo": "nimmsel23/fuel-dev",
+    "pin": "32e711b598034640af35838c94e4077e91f6f798",
+    "upstream": "32e711b598034640af35838c94e4077e91f6f798",
+    "dev": "32e711b598034640af35838c94e4077e91f6f798",
+    "ahead": 0
+  },
+  {
+    "path": "habit-app",
+    "repo": "nimmsel23/habits-dev",
+    "pin": "d78df589065289e0fbbb6bf77404cbfb61cda4cc",
+    "upstream": "d78df589065289e0fbbb6bf77404cbfb61cda4cc",
+    "dev": "d78df589065289e0fbbb6bf77404cbfb61cda4cc",
+    "ahead": 0
+  },
+  {
+    "path": "journal-app",
+    "repo": "nimmsel23/journal-dev",
+    "pin": "e7420218076d87312e757c025b9209d5f37db61b",
+    "upstream": "e7420218076d87312e757c025b9209d5f37db61b",
+    "dev": "e7420218076d87312e757c025b9209d5f37db61b",
+    "ahead": 0
+  },
+  {
+    "path": "learn-app",
+    "repo": "nimmsel23/learn-dev",
+    "pin": "32f639c9d1952b89cd6f7069fa1fadbb3e75bb08",
+    "upstream": "32f639c9d1952b89cd6f7069fa1fadbb3e75bb08",
+    "dev": "32f639c9d1952b89cd6f7069fa1fadbb3e75bb08",
+    "ahead": 0
+  },
+  {
+    "path": "plan-app",
+    "repo": "nimmsel23/plan-dev",
+    "pin": "e4bf12a7bcbdda0f7c36539a122c2d6f522a77f1",
+    "upstream": "b54fd842a4b80006d886f0b944ef1d3536389862",
+    "dev": "b54fd842a4b80006d886f0b944ef1d3536389862",
+    "ahead": 12
+  },
+  {
+    "path": "relax-app",
+    "repo": "nimmsel23/relax-dev",
+    "pin": "eee8316b3c1c0ad960574850ec861c16a3474493",
+    "upstream": "1f4b9d3213d31fd6108f3d29124c362b68c766b0",
+    "dev": "1f4b9d3213d31fd6108f3d29124c362b68c766b0",
+    "ahead": 6
+  },
+  {
+    "path": "skills-app",
+    "repo": "nimmsel23/skills-dev",
+    "pin": "ee962c3f8299fa24d75d51f1d96032aea653b4f8",
+    "upstream": "244558d3e7daac1e130edaac526398fe61d5d24b",
+    "dev": "244558d3e7daac1e130edaac526398fe61d5d24b",
+    "ahead": 3
+  }
+]
