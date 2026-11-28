@@ -19,6 +19,10 @@
 <a href="../org/">Organisation</a>
 </nav>
 <main id="inhalt">
+<section aria-label="Lage live">
+<h2>Lage live</h2>
+<div id="coaching-live"><p>Die Lage lädt live von coach-api und erscheint nur am Laptop oder im Tailnet des Owners. Hier ist sie nicht erreichbar.</p></div>
+</section>
 <section id="coaching" class="coaching-dashboard" aria-label="Coaching">
 <div class="prose prose-coaching">
 <p><strong>Workspace:</strong> Erster Business-Bereich im Dashboard-Index.
@@ -77,7 +81,7 @@
 <p>Einzelangebote in Wien, insbesondere <em>Zwischen den Terminen</em>, beziehen sich auf dieses Startgebiet.</p>
 <h3>Laufende Begleitungen</h3>
 <p>Nur anonymisierte IDs (<code>K-01</code>, <code>K-02</code>, …). Keine Klartext-Namen, keine personenbezogenen Daten.</p>
-<p>Rhythmus und Lage jeder Begleitung stehen automatisch unter <strong>Trainingsrhythmus (automatisch)</strong>. Thema, Stundenziel und Termin trägt der Consultant hier von Hand nach.</p>
+<p>Rhythmus und Lage jeder Begleitung stehen live oben unter <strong>Lage live</strong> (aus coach-api, nur Laptop/Tailnet). Thema, Stundenziel und Termin trägt der Consultant hier von Hand nach.</p>
 <div class="table-scroll"><table>
 <thead>
 <tr>
@@ -244,8 +248,9 @@
 </section>
 </main>
 <footer>
-<p>Quelle: coaching/DASHBOARD.md (Trainingsrhythmus automatisch aus coaching/report.py).</p>
+<p>Quelle: coaching/DASHBOARD.md; Lage live aus coach-api <code>/api/org/coaching</code>.</p>
 </footer>
 </div>
+<script src="./live.js" defer></script>
 </body>
 </html>
